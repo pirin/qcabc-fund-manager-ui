@@ -1,20 +1,17 @@
 "use client";
 
-import type { NextPage } from "next";
-
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { parseUnits, formatUnits } from "viem";
-import { useAccount } from "wagmi";
+import type { NextPage } from "next";
+import { formatUnits, parseUnits } from "viem";
 import { AddressInput, InputBase } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
-import { useScaffoldReadContract, useScaffoldWriteContract, useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 const Admin: NextPage = () => {
-
   const { data: shareTokenVersion } = useScaffoldReadContract({
     contractName: "ShareToken",
-    functionName: "VERSION"
+    functionName: "VERSION",
   });
 
   const [treasuryToAddress, setTreasuryToAddress] = useState<string>("");
@@ -23,15 +20,17 @@ const Admin: NextPage = () => {
 
   const { data: portfolioValue } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "portfolioValue"
+    functionName: "portfolioValue",
   });
 
-  const formattedPortfolioValue = (portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0).toString();
+  const formattedPortfolioValue = (
+    portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0
+  ).toString();
   const [newPortfolioValue, setPortfolioValue] = useState<string>(formattedPortfolioValue.toString());
 
   const { data: lastPortfolioUpdate } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "lastPortfolioValueUpdated"
+    functionName: "lastPortfolioValueUpdated",
   });
 
   //format lastPortfolioUpdate as a relative time from now e.g. 2 hours ago
@@ -41,56 +40,55 @@ const Admin: NextPage = () => {
 
   const { data: fundValue } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "totalFundValue"
+    functionName: "totalFundValue",
   });
 
   const { data: totalShares } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "totalShares"
+    functionName: "totalShares",
   });
 
   const { data: shareToken } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "shareToken"
+    functionName: "shareToken",
   });
 
   const { data: redemptionsAllowed } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "redemptionsAllowed"
+    functionName: "redemptionsAllowed",
   });
 
   const { data: fundManagerVersion } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "VERSION"
+    functionName: "VERSION",
   });
 
   const { data: owner } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "owner"
+    functionName: "owner",
   });
 
   const { data: sharePrice } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "sharePrice"
+    functionName: "sharePrice",
   });
 
   const { data: treasuryBalance } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "treasuryBalance"
+    functionName: "treasuryBalance",
   });
 
-  const formattedTreasuryBalance = (treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0).toString();
-
+  const formattedTreasuryBalance = (
+    treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0
+  ).toString();
 
   const { data: depositToken } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "depositToken"
+    functionName: "depositToken",
   });
 
   const { data: deployedContractData } = useDeployedContractInfo({ contractName: "FundManager" });
   const fundManagerAddress = deployedContractData?.address;
-
-
 
   const { writeContractAsync: writeFundManager } = useScaffoldWriteContract({ contractName: "FundManager" });
 
@@ -100,7 +98,9 @@ const Admin: NextPage = () => {
         <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md p-8">
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Share Price</p>
-            <p className="flex-1 text-right">{sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC</p>
+            <p className="flex-1 text-right">
+              {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
+            </p>
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Portfolio Value</p>
@@ -111,7 +111,10 @@ const Admin: NextPage = () => {
               disabled={!newPortfolioValue}
               onClick={async () => {
                 try {
-                  await writeFundManager({ functionName: "setPortfolioValue", args: [parseUnits(newPortfolioValue, 6)] });
+                  await writeFundManager({
+                    functionName: "setPortfolioValue",
+                    args: [parseUnits(newPortfolioValue, 6)],
+                  });
                   setPortfolioValue(formattedPortfolioValue);
                 } catch (e) {
                   console.error("Error while updating portfolio value", e);
@@ -147,7 +150,9 @@ const Admin: NextPage = () => {
               disabled={!newPortfolioValue}
               onClick={async () => {
                 try {
-                  await writeFundManager({ functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions" });
+                  await writeFundManager({
+                    functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions",
+                  });
                 } catch (e) {
                   console.error("Error while pausing/resuming redemptions", e);
                 }
@@ -183,14 +188,26 @@ const Admin: NextPage = () => {
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Send</p>
             <span className="flex flex-row gap-4 items-center">
-              <InputBase value={treasuryToAmount} onChange={setTreasuryToAmount} placeholder={formattedTreasuryBalance} />
-              USDC to<AddressInput value={treasuryToAddress} onChange={setTreasuryToAddress} placeholder="Destination Address" />
+              <InputBase
+                value={treasuryToAmount}
+                onChange={setTreasuryToAmount}
+                placeholder={formattedTreasuryBalance}
+              />
+              USDC to
+              <AddressInput
+                value={treasuryToAddress}
+                onChange={setTreasuryToAddress}
+                placeholder="Destination Address"
+              />
               <button
                 className="btn btn-primary text-lg px-6"
                 disabled={!newPortfolioValue}
                 onClick={async () => {
                   try {
-                    await writeFundManager({ functionName: "investFunds", args: [treasuryToAddress, parseUnits(treasuryToAmount, 6)] });
+                    await writeFundManager({
+                      functionName: "investFunds",
+                      args: [treasuryToAddress, parseUnits(treasuryToAmount, 6)],
+                    });
                     setTreasuryToAmount("");
                   } catch (e) {
                     console.error("Error while sending treasury funds", e);
@@ -207,13 +224,20 @@ const Admin: NextPage = () => {
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Whitelist address that can update the Portfolio Value</p>
             <span className="flex flex-row gap-4 items-center">
-              <AddressInput value={updaterWhitelistAddress} onChange={setUpdaterWhitelistAddress} placeholder="Updater to Whitelist" />
+              <AddressInput
+                value={updaterWhitelistAddress}
+                onChange={setUpdaterWhitelistAddress}
+                placeholder="Updater to Whitelist"
+              />
               <button
                 className="btn btn-primary text-lg px-6"
                 disabled={!newPortfolioValue}
                 onClick={async () => {
                   try {
-                    await writeFundManager({ functionName: "addToPortfolioUpdatersWhitelist", args: [updaterWhitelistAddress] });
+                    await writeFundManager({
+                      functionName: "addToPortfolioUpdatersWhitelist",
+                      args: [updaterWhitelistAddress],
+                    });
                     setTreasuryToAmount("");
                   } catch (e) {
                     console.error("Error while sending treasury funds", e);

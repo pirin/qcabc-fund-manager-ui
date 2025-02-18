@@ -4,13 +4,13 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { hardhat } from "viem/chains";
+import { baseSepolia, hardhat } from "viem/chains";
+import { useAccount } from "wagmi";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
+import { DepositTokenFaucetButton } from "~~/components/DepositTokenFaucetButton";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
-import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
-
 
 type HeaderMenuLink = {
   label: string;
@@ -43,22 +43,25 @@ export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
 
   return (
     <>
-      {menuLinks.filter(link => allowAdmin || link.type < 1).map(({ label, href, icon }) => {
-        const isActive = pathname === href;
-        return (
-          <li key={href}>
-            <Link
-              href={href}
-              passHref
-              className={`${isActive ? "bg-secondary shadow-md" : ""
+      {menuLinks
+        .filter(link => allowAdmin || link.type < 1)
+        .map(({ label, href, icon }) => {
+          const isActive = pathname === href;
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                passHref
+                className={`${
+                  isActive ? "bg-secondary shadow-md" : ""
                 } hover:bg-secondary hover:shadow-md focus:!bg-secondary active:!text-neutral py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col`}
-            >
-              {icon}
-              <span>{label}</span>
-            </Link>
-          </li>
-        );
-      })}
+              >
+                {icon}
+                <span>{label}</span>
+              </Link>
+            </li>
+          );
+        })}
     </>
   );
 };
@@ -68,7 +71,7 @@ export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
  */
 export const Header = () => {
   const { targetNetwork } = useTargetNetwork();
-  const isLocalNetwork = targetNetwork.id === hardhat.id;
+  const isLocalNetwork = targetNetwork.id === hardhat.id || targetNetwork.id === baseSepolia.id;
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const burgerMenuRef = useRef<HTMLDivElement>(null);
@@ -81,7 +84,7 @@ export const Header = () => {
 
   const { data: owner } = useScaffoldReadContract({
     contractName: "FundManager",
-    functionName: "owner"
+    functionName: "owner",
   });
 
   return (
@@ -125,6 +128,7 @@ export const Header = () => {
       <div className="navbar-end flex-grow mr-4">
         <RainbowKitCustomConnectButton />
         {isLocalNetwork && <FaucetButton />}
+        {isLocalNetwork && <DepositTokenFaucetButton />}
       </div>
     </div>
   );
