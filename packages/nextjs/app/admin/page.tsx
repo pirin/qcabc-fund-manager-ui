@@ -12,7 +12,10 @@ import { useScaffoldReadContract, useScaffoldWriteContract, useDeployedContractI
 
 const Admin: NextPage = () => {
 
-  const { address: connectedAddress } = useAccount();
+  const { data: shareTokenVersion } = useScaffoldReadContract({
+    contractName: "ShareToken",
+    functionName: "VERSION"
+  });
 
   const [treasuryToAddress, setTreasuryToAddress] = useState<string>("");
   const [updaterWhitelistAddress, setUpdaterWhitelistAddress] = useState<string>("");
@@ -93,7 +96,7 @@ const Admin: NextPage = () => {
 
   return (
     <>
-      <div className="flex flex-col w-full w-2/3 mx-auto gap-4 mt-4">
+      <div className="flex flex-col w-full w-1/2 mx-auto gap-4 mt-4">
         <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md p-8">
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Share Price</p>
@@ -154,7 +157,8 @@ const Admin: NextPage = () => {
             </button>
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md p-8">
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
+          <p className="text-2xl font-bold">Contract Info</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Fund Manager Contract</p>
             <p className="flex-1 text-right">version {fundManagerVersion}</p>
@@ -166,6 +170,7 @@ const Admin: NextPage = () => {
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Share Token</p>
+            <p className="flex-1 text-right">version {shareTokenVersion}</p>
             <Address address={shareToken} />
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
@@ -173,9 +178,10 @@ const Admin: NextPage = () => {
             <Address address={depositToken} />
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md p-8">
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
+          <p className="text-2xl font-bold">Send treasury funds</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Send Treasury Funds</p>
+            <p className="flex-1 text-left">Send</p>
             <span className="flex flex-row gap-4 items-center">
               <InputBase value={treasuryToAmount} onChange={setTreasuryToAmount} placeholder={formattedTreasuryBalance} />
               USDC to<AddressInput value={treasuryToAddress} onChange={setTreasuryToAddress} placeholder="Destination Address" />
@@ -196,7 +202,8 @@ const Admin: NextPage = () => {
             </span>
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md p-8">
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
+          <p className="text-2xl font-bold">Whitelisting</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Whitelist address that can update the Portfolio Value</p>
             <span className="flex flex-row gap-4 items-center">
