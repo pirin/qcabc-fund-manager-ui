@@ -1,68 +1,204 @@
 "use client";
 
-import Link from "next/link";
+
+import { useState } from "react";
 import type { NextPage } from "next";
+import { parseUnits, formatUnits } from "viem";
 import { useAccount } from "wagmi";
+import { AddressInput, InputBase } from "~~/components/scaffold-eth";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract, useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { formatDistanceToNow } from "date-fns";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
+
+  const [depositAmount, setDepositAmount] = useState<string>("");
+
+  const [sharesToRedeem, setSharesToredeem] = useState<string>("");
+
+  const { data: sharesOwned } = useScaffoldReadContract({
+    contractName: "ShareToken",
+    functionName: "balanceOf",
+    args: [connectedAddress],
+  });
+
+  const { data: totalSupply } = useScaffoldReadContract({
+    contractName: "ShareToken",
+    functionName: "totalSupply",
+  });
+
+  const { data: depositBalance } = useScaffoldReadContract({
+    contractName: "MockUSDC",
+    functionName: "balanceOf",
+    args: [connectedAddress],
+  });
+
+  const { data: portfolioValue } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "portfolioValue"
+  });
+
+  const { data: lastPortfolioUpdate } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "lastPortfolioValueUpdated"
+  });
+
+  //format lastPortfolioUpdate as a relative time from now e.g. 2 hours ago
+  const formattedLastPortfolioUpdate = lastPortfolioUpdate
+    ? formatDistanceToNow(new Date(Number(lastPortfolioUpdate) * 1000), { addSuffix: true })
+    : "N/A";
+
+  const { data: fundValue } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "totalFundValue"
+  });
+
+  const { data: sharePrice } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "sharePrice"
+  });
+
+  const { data: treasuryBalance } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "treasuryBalance"
+  });
+
+  const { data: redemtionsAllowed } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "redemptionsAllowed"
+  });
+
+  const { data: deployedContractData } = useDeployedContractInfo({ contractName: "FundManager" });
+  const fundManagerAddress = deployedContractData?.address;
+
+  const { data: allowance } = useScaffoldReadContract({
+    contractName: "MockUSDC",
+    functionName: "allowance",
+    args: [connectedAddress, fundManagerAddress],
+  });
+
+  const { writeContractAsync: writeFundManager } = useScaffoldWriteContract({ contractName: "FundManager" });
+  const { writeContractAsync: writeMockUsdc } = useScaffoldWriteContract({ contractName: "MockUSDC" });
+
+  const mustApprove = parseUnits(depositAmount, 6) > (allowance || 0);
 
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div className="px-5">
-          <h1 className="text-center">
-            <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
-          </h1>
-          <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row">
-            <p className="my-2 font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
+          <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row gap-12">
+            <p className="text-sm">Shares Owned: <strong>{sharesOwned ? parseFloat(formatUnits(sharesOwned, 6)).toFixed(2) : 0}</strong></p>
+            <p className={"text-red-500"}>{redemtionsAllowed ? "" : "Redemptions are temporary PAUSED!"}</p>
+            <p className="text-sm">Available to invest:<strong>{depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0} USDC</strong></p>
           </div>
-
-          <p className="text-center text-lg">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p>
-          <p className="text-center text-lg">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p>
         </div>
 
-        <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
-              </p>
+        <div className="flex-grow bg-base-300 w-full">
+          <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 pt-10">
+            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center w-full md:w-1/3 rounded-3xl mt-10">
+              <h3 className="text-2xl font-bold">Make a Deposit</h3>
+              <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">
+
+                {/* <div className="py-4">Allowance: {allowance ? parseFloat(formatUnits(allowance, 6)).toFixed(2) : 0} USDC. Approve: {mustApprove ? "yes" : "no"} </div> */}
+                <div className="py-4">USDC Amount to Deposit</div>
+                <div className="flex gap-2 mb-2 items-center">
+                  <InputBase value={depositAmount} onChange={setDepositAmount} placeholder="100" />
+                  <button
+                    disabled={!depositBalance}
+                    className="btn btn-secondary text-xs h-6 min-h-6"
+                    onClick={() => {
+                      if (depositBalance) {
+                        setDepositAmount(formatUnits(depositBalance, 6));
+                      }
+                    }}
+                  >
+                    Max
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <button
+                  className="btn btn-primary text-lg px-12 mt-2"
+                  disabled={!depositAmount}
+                  onClick={async () => {
+
+                    if (mustApprove) {
+                      try {
+                        await writeMockUsdc({ functionName: "approve", args: [fundManagerAddress, parseUnits(depositAmount, 6)] });
+                      } catch (e) {
+                        console.error("Error approving funds deposit", e);
+                      }
+                    }
+                    else {
+                      try {
+                        await writeFundManager({ functionName: "depositFunds", args: [parseUnits(depositAmount, 6)] });
+                        setDepositAmount("");
+                      } catch (e) {
+                        console.error("Error while depositing funds", e);
+                      }
+                    }
+                  }}
+                >
+                  {mustApprove ? "Approve" : "Deposit"}
+                </button>
+              </div>
             </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
+            {redemtionsAllowed && sharesOwned && parseFloat(formatUnits(sharesOwned, 6)) > 0 && (
+              <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center w-full md:w-1/3 rounded-3xl mt-10">
+
+                <h3 className="text-2xl font-bold">Redeem Shares</h3>
+                <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">
+
+                  <div className="py-4">Shares to redeem</div>
+                  <div className="flex gap-2 mb-2 items-center">
+                    <InputBase value={sharesToRedeem} onChange={setSharesToredeem} placeholder="0" />
+
+                    <button
+                      disabled={!sharesOwned}
+                      className="btn btn-secondary text-xs h-6 min-h-6"
+                      onClick={() => {
+                        if (sharesOwned) {
+                          setSharesToredeem(formatUnits(sharesOwned, 6));
+                        }
+                      }}
+                    >
+                      Max
+                    </button>
+
+                  </div>
+                </div>
+                <div>
+                  <button
+                    className="btn btn-primary text-lg px-12 mt-2"
+                    disabled={!sharesToRedeem || !redemtionsAllowed}
+                    onClick={async () => {
+                      try {
+                        await writeFundManager({ functionName: "redeemShares", args: [parseUnits(sharesToRedeem, 6)] });
+                        setSharesToredeem("");
+                      } catch (e) {
+                        console.error("Error while redeeming funds", e);
+                      }
+                    }}
+                  >
+                    {redemtionsAllowed ? "Redeem Shares" : "Redemptions are Paused"}
+                  </button>
+                </div>
+              </div>)}
           </div>
+        </div>
+
+        <div className="px-5">
+          <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row gap-12">
+            <p className="text-sm">Total Shares: <strong>{totalSupply ? parseFloat(formatUnits(totalSupply, 6)).toFixed(2) : 0}</strong></p>
+            <p className="text-sm">Share price: <strong>{sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0}</strong> USDC</p>
+            <p className="text-sm">Treasury Balance: <strong>{treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0}</strong> USDC</p>
+            <p className="text-sm">Total Fund Value: <strong>{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0}</strong> USDC</p>
+            <p className="text-sm">Portfolio Value: <strong>{portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0}</strong> USDC</p>
+
+          </div>
+          <div className="text-xs opacity-50">Portfolio Value as of: {formattedLastPortfolioUpdate}</div>
         </div>
       </div>
     </>

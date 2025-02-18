@@ -8,41 +8,50 @@ import { hardhat } from "viem/chains";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { useAccount } from "wagmi";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+
 
 type HeaderMenuLink = {
   label: string;
   href: string;
   icon?: React.ReactNode;
+  type: number;
 };
 
 export const menuLinks: HeaderMenuLink[] = [
   {
     label: "Home",
     href: "/",
+    type: 0,
   },
-
+  {
+    label: "Fund Administration",
+    href: "/admin",
+    type: 1,
+  },
   {
     label: "Debug Contracts",
     href: "/debug",
     icon: <BugAntIcon className="h-4 w-4" />,
+    type: 1,
   },
 ];
 
-export const HeaderMenuLinks = () => {
+export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
   const pathname = usePathname();
 
   return (
     <>
-      {menuLinks.map(({ label, href, icon }) => {
+      {menuLinks.filter(link => allowAdmin || link.type < 1).map(({ label, href, icon }) => {
         const isActive = pathname === href;
         return (
           <li key={href}>
             <Link
               href={href}
               passHref
-              className={`${
-                isActive ? "bg-secondary shadow-md" : ""
-              } hover:bg-secondary hover:shadow-md focus:!bg-secondary active:!text-neutral py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col`}
+              className={`${isActive ? "bg-secondary shadow-md" : ""
+                } hover:bg-secondary hover:shadow-md focus:!bg-secondary active:!text-neutral py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col`}
             >
               {icon}
               <span>{label}</span>
@@ -68,6 +77,13 @@ export const Header = () => {
     useCallback(() => setIsDrawerOpen(false), []),
   );
 
+  const { address: connectedAddress } = useAccount();
+
+  const { data: owner } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "owner"
+  });
+
   return (
     <div className="sticky lg:static top-0 navbar bg-base-100 min-h-0 flex-shrink-0 justify-between z-20 shadow-md shadow-secondary px-0 sm:px-2">
       <div className="navbar-start w-auto lg:w-1/2">
@@ -89,7 +105,7 @@ export const Header = () => {
                 setIsDrawerOpen(false);
               }}
             >
-              <HeaderMenuLinks />
+              {HeaderMenuLinks(connectedAddress === owner)}
             </ul>
           )}
         </div>
@@ -103,7 +119,7 @@ export const Header = () => {
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
-          <HeaderMenuLinks />
+          {HeaderMenuLinks(connectedAddress === owner)}
         </ul>
       </div>
       <div className="navbar-end flex-grow mr-4">
