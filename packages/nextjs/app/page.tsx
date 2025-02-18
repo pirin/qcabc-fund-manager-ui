@@ -91,7 +91,7 @@ const Home: NextPage = () => {
             </p>
             <p className={"text-red-500"}>{redemtionsAllowed ? "" : "Redemptions are temporary PAUSED!"}</p>
             <p className="text-sm">
-              Available to invest:
+              Available to invest:{" "}
               <strong>{depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0} USDC</strong>
             </p>
           </div>
@@ -209,7 +209,7 @@ const Home: NextPage = () => {
               <strong>{portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0}</strong> USDC
             </p>
           </div>
-          <div className="text-xs opacity-50">Portfolio Value as of: {formattedLastPortfolioUpdate}</div>
+          <div className="text-xs opacity-50 text-center">Portfolio Value as of: {formattedLastPortfolioUpdate}</div>
         </div>
       </div>
     </>
