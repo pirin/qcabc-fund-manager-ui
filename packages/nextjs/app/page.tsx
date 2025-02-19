@@ -83,7 +83,7 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <div className="flex items-center flex-col flex-grow pt-10">
+      <div className="flex items-center flex-col flex-grow">
         <div className="px-5">
           <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="text-sm">
@@ -92,7 +92,7 @@ const Home: NextPage = () => {
             <p className={"text-red-500"}>{redemtionsAllowed ? "" : "Redemptions are temporary PAUSED!"}</p>
             <p className="text-sm">
               Available to invest:{" "}
-              <strong>{depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0} USDC</strong>
+              <strong>{depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0.0} USDC</strong>
             </p>
           </div>
         </div>
@@ -105,7 +105,9 @@ const Home: NextPage = () => {
                 {/* <div className="py-4">Allowance: {allowance ? parseFloat(formatUnits(allowance, 6)).toFixed(2) : 0} USDC. Approve: {mustApprove ? "yes" : "no"} </div> */}
                 <div className="py-4">USDC Amount to Deposit</div>
                 <div className="flex gap-2 mb-2 items-center">
-                  <InputBase value={depositAmount} onChange={setDepositAmount} placeholder="100" />
+                  <span className="w-40">
+                    <InputBase value={depositAmount} onChange={setDepositAmount} placeholder="100" />
+                  </span>
                   <button
                     disabled={!depositBalance}
                     className="btn btn-secondary text-xs h-6 min-h-6"
@@ -153,8 +155,9 @@ const Home: NextPage = () => {
                 <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">
                   <div className="py-4">Shares to redeem</div>
                   <div className="flex gap-2 mb-2 items-center">
-                    <InputBase value={sharesToRedeem} onChange={setSharesToredeem} placeholder="0" />
-
+                    <span className="w-40">
+                      <InputBase value={sharesToRedeem} onChange={setSharesToredeem} placeholder="0" />
+                    </span>
                     <button
                       disabled={!sharesOwned}
                       className="btn btn-secondary text-xs h-6 min-h-6"

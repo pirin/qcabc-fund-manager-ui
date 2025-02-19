@@ -1,6 +1,6 @@
 {
-  "name": "se-2",
-  "version": "0.0.1",
+  "name": "qcabc-fund-manager",
+  "version": "0.0.2",
   "private": true,
   "workspaces": {
     "packages": [
@@ -8,18 +8,18 @@
     ]
   },
   "scripts": {
-    "start": "yarn workspace @se-2/nextjs dev",
-    "next:lint": "yarn workspace @se-2/nextjs lint",
-    "next:format": "yarn workspace @se-2/nextjs format",
-    "next:check-types": "yarn workspace @se-2/nextjs check-types",
-    "next:build": "yarn workspace @se-2/nextjs build",
-    "next:serve": "yarn workspace @se-2/nextjs serve",
+    "start": "yarn workspace @qcabc-fund-manager/nextjs dev",
+    "next:lint": "yarn workspace @qcabc-fund-manager/nextjs lint",
+    "next:format": "yarn workspace @qcabc-fund-manager/nextjs format",
+    "next:check-types": "yarn workspace @qcabc-fund-manager/nextjs check-types",
+    "next:build": "yarn workspace @qcabc-fund-manager/nextjs build",
+    "next:serve": "yarn workspace @qcabc-fund-manager/nextjs serve",
     "format": "yarn next:format",
     "postinstall": "husky install",
     "precommit": "lint-staged",
-    "vercel": "yarn workspace @se-2/nextjs vercel",
-    "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
-    "vercel:login": "yarn workspace @se-2/nextjs vercel:login"
+    "vercel": "yarn workspace @qcabc-fund-manager/nextjs vercel",
+    "vercel:yolo": "yarn workspace @qcabc-fund-manager/nextjs vercel:yolo",
+    "vercel:login": "yarn workspace @qcabc-fund-manager/nextjs vercel:login"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {

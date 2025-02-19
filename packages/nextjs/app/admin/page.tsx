@@ -14,7 +14,6 @@ const Admin: NextPage = () => {
     functionName: "VERSION",
   });
 
-  const [treasuryToAddress, setTreasuryToAddress] = useState<string>("");
   const [updaterWhitelistAddress, setUpdaterWhitelistAddress] = useState<string>("");
   const [treasuryToAmount, setTreasuryToAmount] = useState<string>("");
 
@@ -94,8 +93,9 @@ const Admin: NextPage = () => {
 
   return (
     <>
-      <div className="flex flex-col w-full w-1/2 mx-auto gap-4 mt-4">
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md p-8">
+      <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
+          <p className="text-2xl font-bold">Fund Valuation</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Share Price</p>
             <p className="flex-1 text-right">
@@ -104,25 +104,33 @@ const Admin: NextPage = () => {
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Portfolio Value</p>
-            <InputBase value={newPortfolioValue} onChange={setPortfolioValue} placeholder={formattedPortfolioValue} />
-            USDC
-            <button
-              className="btn btn-primary text-lg px-6"
-              disabled={!newPortfolioValue}
-              onClick={async () => {
-                try {
-                  await writeFundManager({
-                    functionName: "setPortfolioValue",
-                    args: [parseUnits(newPortfolioValue, 6)],
-                  });
-                  setPortfolioValue(formattedPortfolioValue);
-                } catch (e) {
-                  console.error("Error while updating portfolio value", e);
-                }
-              }}
-            >
-              Update
-            </button>
+            <div className="flex flex-row gap-4 items-center justify-end">
+              <span className="w-36">
+                <InputBase
+                  value={newPortfolioValue}
+                  onChange={setPortfolioValue}
+                  placeholder={formattedPortfolioValue}
+                />
+              </span>
+              USDC
+              <button
+                className="btn btn-primary text-lg px-6"
+                disabled={!newPortfolioValue}
+                onClick={async () => {
+                  try {
+                    await writeFundManager({
+                      functionName: "setPortfolioValue",
+                      args: [parseUnits(newPortfolioValue, 6)],
+                    });
+                    setPortfolioValue(formattedPortfolioValue);
+                  } catch (e) {
+                    console.error("Error while updating portfolio value", e);
+                  }
+                }}
+              >
+                Update
+              </button>
+            </div>
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Last portfolio value updated</p>
@@ -184,21 +192,29 @@ const Admin: NextPage = () => {
           </div>
         </div>
         <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
-          <p className="text-2xl font-bold">Send treasury funds</p>
+          <p className="text-2xl font-bold">Deposit Transfer</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Send</p>
-            <span className="flex flex-row gap-4 items-center">
-              <InputBase
-                value={treasuryToAmount}
-                onChange={setTreasuryToAmount}
-                placeholder={formattedTreasuryBalance}
-              />
-              USDC to
-              <AddressInput
-                value={treasuryToAddress}
-                onChange={setTreasuryToAddress}
-                placeholder="Destination Address"
-              />
+            <p className="flex-1 text-left">Transfer deposited funds to the Fund Multisig Wallet</p>
+            <div className="flex flex-row gap-4 items-center justify-end">
+              <span className="w-36">
+                <InputBase
+                  value={treasuryToAmount}
+                  onChange={setTreasuryToAmount}
+                  placeholder={formattedTreasuryBalance}
+                />
+              </span>
+              <button
+                disabled={!treasuryBalance}
+                className="btn btn-secondary text-xs h-6 min-h-6"
+                onClick={() => {
+                  if (treasuryBalance) {
+                    setTreasuryToAmount(formatUnits(treasuryBalance, 6));
+                  }
+                }}
+              >
+                Max
+              </button>
+              USDC
               <button
                 className="btn btn-primary text-lg px-6"
                 disabled={!newPortfolioValue}
@@ -206,7 +222,7 @@ const Admin: NextPage = () => {
                   try {
                     await writeFundManager({
                       functionName: "investFunds",
-                      args: [treasuryToAddress, parseUnits(treasuryToAmount, 6)],
+                      args: [owner, parseUnits(treasuryToAmount, 6)],
                     });
                     setTreasuryToAmount("");
                   } catch (e) {
@@ -216,19 +232,21 @@ const Admin: NextPage = () => {
               >
                 Send
               </button>
-            </span>
+            </div>
           </div>
         </div>
         <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
-          <p className="text-2xl font-bold">Whitelisting</p>
+          <p className="text-2xl font-bold">Portfolio Fund Value Updater Whitelisting</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Whitelist address that can update the Portfolio Value</p>
+            <p className="flex-1 text-left">Address to Whitelist</p>
             <span className="flex flex-row gap-4 items-center">
-              <AddressInput
-                value={updaterWhitelistAddress}
-                onChange={setUpdaterWhitelistAddress}
-                placeholder="Updater to Whitelist"
-              />
+              <span className="w-96">
+                <AddressInput
+                  value={updaterWhitelistAddress}
+                  onChange={setUpdaterWhitelistAddress}
+                  placeholder="Address to Whitelist"
+                />
+              </span>
               <button
                 className="btn btn-primary text-lg px-6"
                 disabled={!newPortfolioValue}
@@ -244,7 +262,7 @@ const Admin: NextPage = () => {
                   }
                 }}
               >
-                Add to Whitelist
+                Whitelist
               </button>
             </span>
           </div>
