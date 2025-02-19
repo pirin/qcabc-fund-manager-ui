@@ -16,7 +16,7 @@ export const Footer = () => {
   const isLocalNetwork = targetNetwork.id === hardhat.id;
 
   function VersionDisplay() {
-    return <div className="text-xs opacity-50 text-center">dApp v{"0.0.3"}</div>;
+    return <div className="text-xs opacity-50 text-center">dApp v{"0.0.4"}</div>;
   }
 
   return (
