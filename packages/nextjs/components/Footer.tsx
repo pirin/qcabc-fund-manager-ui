@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import packageInfo from "../package.json";
 import { hardhat } from "viem/chains";
 import { CurrencyDollarIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { SwitchTheme } from "~~/components/SwitchTheme";
@@ -16,7 +17,7 @@ export const Footer = () => {
   const isLocalNetwork = targetNetwork.id === hardhat.id;
 
   function VersionDisplay() {
-    return <div className="text-xs opacity-50 text-center">dApp v{"0.0.4"}</div>;
+    return <div className="text-xs opacity-50 text-center">dApp v{packageInfo.version}</div>;
   }
 
   return (

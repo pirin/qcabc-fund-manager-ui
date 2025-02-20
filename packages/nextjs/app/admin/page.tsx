@@ -77,6 +77,16 @@ const Admin: NextPage = () => {
     functionName: "treasuryBalance",
   });
 
+  const { data: shareTokenName } = useScaffoldReadContract({
+    contractName: "ShareToken",
+    functionName: "name",
+  });
+
+  const { data: shareTokenSymbol } = useScaffoldReadContract({
+    contractName: "ShareToken",
+    functionName: "symbol",
+  });
+
   const formattedTreasuryBalance = (
     treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0
   ).toString();
@@ -174,7 +184,7 @@ const Admin: NextPage = () => {
           <p className="text-2xl font-bold">Contract Info</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Fund Manager Contract</p>
-            <p className="flex-1 text-right">version {fundManagerVersion}</p>
+            <p className="flex-1 text-right">v{fundManagerVersion}</p>
             <Address address={fundManagerAddress} />
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
@@ -183,7 +193,9 @@ const Admin: NextPage = () => {
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Share Token</p>
-            <p className="flex-1 text-right">version {shareTokenVersion}</p>
+            <p className="flex-1 text-right">
+              {shareTokenName} ({shareTokenSymbol}) v{shareTokenVersion}
+            </p>
             <Address address={shareToken} />
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
