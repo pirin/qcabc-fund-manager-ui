@@ -4,9 +4,18 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { InputBase } from "~~/components/scaffold-eth";
+import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useTransactor } from "~~/hooks/scaffold-eth";
+
+enum ApprovalStatus {
+  Idle = 0,
+  Pending = 1,
+  Approved = 2,
+  Rejected = -2,
+}
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -15,7 +24,9 @@ const Home: NextPage = () => {
 
   const [sharesToRedeem, setSharesToredeem] = useState<string>("");
 
-  const { data: sharesOwned } = useScaffoldReadContract({
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(ApprovalStatus.Idle);
+
+  const { data: sharesOwned, refetch: refetchSharesOwned } = useScaffoldReadContract({
     contractName: "ShareToken",
     functionName: "balanceOf",
     args: [connectedAddress],
@@ -26,7 +37,7 @@ const Home: NextPage = () => {
     functionName: "totalSupply",
   });
 
-  const { data: depositBalance } = useScaffoldReadContract({
+  const { data: depositBalance, refetch: refetchBalance } = useScaffoldReadContract({
     contractName: "MockUSDC",
     functionName: "balanceOf",
     args: [connectedAddress],
@@ -70,14 +81,33 @@ const Home: NextPage = () => {
   const { data: deployedContractData } = useDeployedContractInfo({ contractName: "FundManager" });
   const fundManagerAddress = deployedContractData?.address;
 
-  const { data: allowance } = useScaffoldReadContract({
+  const { data: allowance, refetch: refetchAllowence } = useScaffoldReadContract({
     contractName: "MockUSDC",
     functionName: "allowance",
     args: [connectedAddress, fundManagerAddress],
   });
 
-  const { writeContractAsync: writeFundManager } = useScaffoldWriteContract({ contractName: "FundManager" });
-  const { writeContractAsync: writeMockUsdc } = useScaffoldWriteContract({ contractName: "MockUSDC" });
+  const { writeContractAsync: writeFundManager, isPending: isFundManagerTxnPending } = useScaffoldWriteContract({
+    contractName: "FundManager",
+  });
+
+  const { data: depositToken } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "depositToken",
+  });
+
+  //Dynamcally construct the approval tranbsaction based on the current deposit token from the FundManager contract
+  const { writeContractAsync, isPending: isApprovalTxnPending } = useWriteContract();
+
+  const writeContractApprovalAsyncWithParams = () =>
+    writeContractAsync({
+      address: depositToken || "",
+      abi: DeployedContracts[31337].MockUSDC.abi, //reuse the approve method from the MockUSDC contract
+      functionName: "approve",
+      args: [fundManagerAddress || "", parseUnits(depositAmount, 6)],
+    });
+
+  const writeTx = useTransactor();
 
   const mustApprove = parseUnits(depositAmount, 6) > (allowance || 0);
 
@@ -124,21 +154,43 @@ const Home: NextPage = () => {
               <div className="flex gap-2 mb-2">
                 <button
                   className="btn btn-primary text-lg px-12 mt-2"
-                  disabled={!depositAmount}
+                  disabled={
+                    !depositAmount ||
+                    isApprovalTxnPending ||
+                    approvalStatus == ApprovalStatus.Pending ||
+                    isFundManagerTxnPending
+                  }
                   onClick={async () => {
                     if (mustApprove) {
                       try {
-                        await writeMockUsdc({
-                          functionName: "approve",
-                          args: [fundManagerAddress, parseUnits(depositAmount, 6)],
-                        });
+                        setApprovalStatus(ApprovalStatus.Pending);
+                        await writeTx(writeContractApprovalAsyncWithParams, { blockConfirmations: 1 });
+                        try {
+                          await refetchAllowence();
+                          setApprovalStatus(ApprovalStatus.Approved);
+                        } catch (error) {
+                          setApprovalStatus(ApprovalStatus.Idle);
+                          console.error("Error refetching data:", error);
+                        }
                       } catch (e) {
+                        setApprovalStatus(ApprovalStatus.Rejected);
                         console.error("Error approving funds deposit", e);
                       }
                     } else {
                       try {
+                        setApprovalStatus(ApprovalStatus.Idle);
                         await writeFundManager({ functionName: "depositFunds", args: [parseUnits(depositAmount, 6)] });
                         setDepositAmount("");
+                        try {
+                          await refetchSharesOwned();
+                        } catch (error) {
+                          console.error("Error refetching data:", error);
+                        }
+                        try {
+                          await refetchBalance();
+                        } catch (error) {
+                          console.error("Error refetching data:", error);
+                        }
                       } catch (e) {
                         console.error("Error while depositing funds", e);
                       }
@@ -147,6 +199,13 @@ const Home: NextPage = () => {
                 >
                   {mustApprove ? "Approve" : "Deposit"}
                 </button>
+              </div>
+              <div className="text-xs opacity-50">
+                {approvalStatus == ApprovalStatus.Approved
+                  ? "Approved! Press 'Deposit' to complete your deposit"
+                  : mustApprove
+                    ? "Before depositing, you need to first 'Approve' your deposit"
+                    : ""}
               </div>
             </div>
             {redemtionsAllowed && sharesOwned && parseFloat(formatUnits(sharesOwned, 6)) > 0 && (
@@ -174,11 +233,21 @@ const Home: NextPage = () => {
                 <div>
                   <button
                     className="btn btn-primary text-lg px-12 mt-2"
-                    disabled={!sharesToRedeem || !redemtionsAllowed}
+                    disabled={!sharesToRedeem || !redemtionsAllowed || isFundManagerTxnPending}
                     onClick={async () => {
                       try {
                         await writeFundManager({ functionName: "redeemShares", args: [parseUnits(sharesToRedeem, 6)] });
                         setSharesToredeem("");
+                        try {
+                          await refetchSharesOwned();
+                        } catch (error) {
+                          console.error("Error refetching data:", error);
+                        }
+                        try {
+                          await refetchBalance();
+                        } catch (error) {
+                          console.error("Error refetching data:", error);
+                        }
                       } catch (e) {
                         console.error("Error while redeeming funds", e);
                       }

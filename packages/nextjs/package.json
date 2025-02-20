@@ -1,7 +1,7 @@
 {
   "name": "@qcabc-fund-manager/nextjs",
   "private": true,
-  "version": "0.2.3",
+  "version": "0.2.5",
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
@@ -12,7 +12,9 @@
     "start": "next dev",
     "vercel": "vercel --build-env YARN_ENABLE_IMMUTABLE_INSTALLS=false --build-env ENABLE_EXPERIMENTAL_COREPACK=1 --build-env VERCEL_TELEMETRY_DISABLED=1",
     "vercel:yolo": "vercel --build-env YARN_ENABLE_IMMUTABLE_INSTALLS=false --build-env ENABLE_EXPERIMENTAL_COREPACK=1 --build-env NEXT_PUBLIC_IGNORE_BUILD_ERROR=true --build-env VERCEL_TELEMETRY_DISABLED=1",
-    "vercel:login": "vercel login"
+    "vercel:login": "vercel login",
+    "vbminor": "yarn version minor",
+    "vbpatch": "yarn version patch"
   },
   "dependencies": {
     "@heroicons/react": "~2.1.5",
