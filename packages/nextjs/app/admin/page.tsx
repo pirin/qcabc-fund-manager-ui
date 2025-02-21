@@ -4,8 +4,10 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
+import { useReadContract } from "wagmi";
 import { AddressInput, InputBase } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
+import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 const Admin: NextPage = () => {
@@ -17,7 +19,7 @@ const Admin: NextPage = () => {
   const [updaterWhitelistAddress, setUpdaterWhitelistAddress] = useState<string>("");
   const [treasuryToAmount, setTreasuryToAmount] = useState<string>("");
 
-  const { data: portfolioValue } = useScaffoldReadContract({
+  const { data: portfolioValue, refetch: refetchPortfolioValue } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "portfolioValue",
   });
@@ -25,9 +27,10 @@ const Admin: NextPage = () => {
   const formattedPortfolioValue = (
     portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0
   ).toString();
-  const [newPortfolioValue, setPortfolioValue] = useState<string>(formattedPortfolioValue.toString());
 
-  const { data: lastPortfolioUpdate } = useScaffoldReadContract({
+  const [newPortfolioValue, setNewPortfolioValue] = useState<string>("");
+
+  const { data: lastPortfolioUpdate, refetch: refetchLastPortfolioUpdate } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "lastPortfolioValueUpdated",
   });
@@ -37,7 +40,7 @@ const Admin: NextPage = () => {
     ? formatDistanceToNow(new Date(Number(lastPortfolioUpdate) * 1000), { addSuffix: true })
     : "N/A";
 
-  const { data: fundValue } = useScaffoldReadContract({
+  const { data: fundValue, refetch: refetchFundValue } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "totalFundValue",
   });
@@ -52,7 +55,7 @@ const Admin: NextPage = () => {
     functionName: "shareToken",
   });
 
-  const { data: redemptionsAllowed } = useScaffoldReadContract({
+  const { data: redemptionsAllowed, refetch: refetchRedemptions } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "redemptionsAllowed",
   });
@@ -67,12 +70,12 @@ const Admin: NextPage = () => {
     functionName: "owner",
   });
 
-  const { data: sharePrice } = useScaffoldReadContract({
+  const { data: sharePrice, refetch: refetchSharePrice } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "sharePrice",
   });
 
-  const { data: treasuryBalance } = useScaffoldReadContract({
+  const { data: treasuryBalance, refetch: refetchBalance } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "treasuryBalance",
   });
@@ -101,10 +104,34 @@ const Admin: NextPage = () => {
 
   const { writeContractAsync: writeFundManager } = useScaffoldWriteContract({ contractName: "FundManager" });
 
+  const { data: depositTokenName } = useReadContract({
+    address: depositToken || "",
+    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    functionName: "name",
+  });
+
+  const { data: depositTokenSymbol } = useReadContract({
+    address: depositToken || "",
+    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    functionName: "symbol",
+  });
+
+  function refetchFundValuations() {
+    try {
+      refetchPortfolioValue();
+      refetchLastPortfolioUpdate();
+      refetchFundValue();
+      refetchSharePrice();
+      refetchBalance();
+    } catch (e) {
+      console.error("Error while refreshing data after updating portfolio value", e);
+    }
+  }
+
   return (
     <>
       <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
           <p className="text-2xl font-bold">Fund Valuation</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Share Price</p>
@@ -118,7 +145,7 @@ const Admin: NextPage = () => {
               <span className="w-36">
                 <InputBase
                   value={newPortfolioValue}
-                  onChange={setPortfolioValue}
+                  onChange={setNewPortfolioValue}
                   placeholder={formattedPortfolioValue}
                 />
               </span>
@@ -132,7 +159,8 @@ const Admin: NextPage = () => {
                       functionName: "setPortfolioValue",
                       args: [parseUnits(newPortfolioValue, 6)],
                     });
-                    setPortfolioValue(formattedPortfolioValue);
+                    setNewPortfolioValue("");
+                    refetchFundValuations();
                   } catch (e) {
                     console.error("Error while updating portfolio value", e);
                   }
@@ -146,12 +174,9 @@ const Admin: NextPage = () => {
             <p className="flex-1 text-left">Last portfolio value updated</p>
             <p className="flex-1 text-right">{formattedLastPortfolioUpdate}</p>
           </div>
+
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Treasury Balance</p>
-            <p className="flex-1 text-right">{formattedTreasuryBalance} USDC</p>
-          </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Fund Value</p>
+            <p className="flex-1 text-left">Total Fund Value (Deposits Balance + Porfolio Value)</p>
             <p className="flex-1 text-right">{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0} USDC</p>
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
@@ -165,12 +190,16 @@ const Admin: NextPage = () => {
             </span>
             <button
               className="btn btn-primary text-lg px-6"
-              disabled={!newPortfolioValue}
               onClick={async () => {
                 try {
                   await writeFundManager({
                     functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions",
                   });
+                  try {
+                    refetchRedemptions(); // refresh the redemptionsAllowed state
+                  } catch (e) {
+                    console.error("Error while refreshing redemptions state", e);
+                  }
                 } catch (e) {
                   console.error("Error while pausing/resuming redemptions", e);
                 }
@@ -180,7 +209,7 @@ const Admin: NextPage = () => {
             </button>
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
           <p className="text-2xl font-bold">Contract Info</p>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Fund Manager Contract</p>
@@ -200,13 +229,21 @@ const Admin: NextPage = () => {
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Deposit Token</p>
+            <p className="flex-1 text-right">
+              {depositTokenName} ({depositTokenSymbol})
+            </p>
             <Address address={depositToken} />
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8">
-          <p className="text-2xl font-bold">Deposit Transfer</p>
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
+          <p className="text-2xl font-bold">Deposits</p>
+
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Transfer deposited funds to the Fund Multisig Wallet</p>
+            <p className="flex-1 text-left">Deposits Balance</p>
+            <p className="flex-1 text-right">{formattedTreasuryBalance} USDC</p>
+          </div>
+          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+            <p className="flex-1 text-left">Transfer deposits to the Fund Investment Wallet</p>
             <div className="flex flex-row gap-4 items-center justify-end">
               <span className="w-36">
                 <InputBase
@@ -229,7 +266,7 @@ const Admin: NextPage = () => {
               USDC
               <button
                 className="btn btn-primary text-lg px-6"
-                disabled={!newPortfolioValue}
+                disabled={!treasuryToAmount}
                 onClick={async () => {
                   try {
                     await writeFundManager({
@@ -237,12 +274,13 @@ const Admin: NextPage = () => {
                       args: [owner, parseUnits(treasuryToAmount, 6)],
                     });
                     setTreasuryToAmount("");
+                    refetchFundValuations();
                   } catch (e) {
                     console.error("Error while sending treasury funds", e);
                   }
                 }}
               >
-                Send
+                Transfer
               </button>
             </div>
           </div>
@@ -261,7 +299,7 @@ const Admin: NextPage = () => {
               </span>
               <button
                 className="btn btn-primary text-lg px-6"
-                disabled={!newPortfolioValue}
+                disabled={!updaterWhitelistAddress}
                 onClick={async () => {
                   try {
                     await writeFundManager({
