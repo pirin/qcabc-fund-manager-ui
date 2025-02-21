@@ -1,1 +1,1 @@
-yarn vbpatch && yarn lint-staged --verbose
+yarn vbpatch && git add packages/nextjs/package.json
