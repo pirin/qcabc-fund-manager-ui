@@ -130,14 +130,15 @@ const Home: NextPage = () => {
         <div className="flex-grow bg-base-300 w-full">
           <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 pt-10">
             <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center w-full md:w-1/3 rounded-3xl mt-10">
-              <h3 className="text-2xl font-bold">Make a Deposit</h3>
+              <h3 className="text-2xl font-bold">Deposit Funds</h3>
               <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">
                 {/* <div className="py-4">Allowance: {allowance ? parseFloat(formatUnits(allowance, 6)).toFixed(2) : 0} USDC. Approve: {mustApprove ? "yes" : "no"} </div> */}
-                <div className="py-4">USDC Amount to Deposit</div>
+                <div className="py-4">Amount to Deposit</div>
                 <div className="flex gap-2 mb-2 items-center">
                   <span className="w-40">
                     <InputBase value={depositAmount} onChange={setDepositAmount} placeholder="100" />
                   </span>
+                  USDC
                   <button
                     disabled={!depositBalance}
                     className="btn btn-secondary text-xs h-6 min-h-6"
