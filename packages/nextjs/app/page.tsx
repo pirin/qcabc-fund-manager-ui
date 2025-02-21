@@ -126,7 +126,6 @@ const Home: NextPage = () => {
             </p>
           </div>
         </div>
-
         <div className="flex-grow bg-base-300 w-full">
           <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 pt-10">
             <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center w-full md:w-1/3 rounded-3xl mt-10">
