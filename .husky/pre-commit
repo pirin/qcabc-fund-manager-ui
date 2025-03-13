@@ -1,1 +1,1 @@
-yarn vbpatch && git add packages/nextjs/package.json
+yarn vbpatch && git add packages/nextjs/package.json .yarn/versions/*.yml 
