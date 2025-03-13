@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useReadContract } from "wagmi";
+import ShareholderTable from "~~/components/ShareholdersTable";
 import { AddressInput, InputBase } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
@@ -315,6 +316,12 @@ const Admin: NextPage = () => {
                 Whitelist
               </button>
             </span>
+          </div>
+        </div>
+        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
+          <p className="text-2xl font-bold">Shareholders</p>
+          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+            <ShareholderTable />
           </div>
         </div>
       </div>

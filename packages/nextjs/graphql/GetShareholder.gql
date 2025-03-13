@@ -1,0 +1,20 @@
+query GetShareholder($user: ID!) {
+  shareholder(id: $user) {
+    account
+    shares
+    lastUpdated
+    id
+    redemptions {
+      depositAmount
+      blockTimestamp
+      transactionHash
+      shareTokensRedeemed
+    }
+    deposits {
+      blockTimestamp
+      depositAmount
+      shareTokensMinted
+      transactionHash
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "@qcabc-fund-manager/nextjs",
   "private": true,
-  "version": "0.2.7",
+  "version": "0.2.8",
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
@@ -14,7 +14,9 @@
     "vercel:yolo": "vercel --build-env YARN_ENABLE_IMMUTABLE_INSTALLS=false --build-env ENABLE_EXPERIMENTAL_COREPACK=1 --build-env NEXT_PUBLIC_IGNORE_BUILD_ERROR=true --build-env VERCEL_TELEMETRY_DISABLED=1",
     "vercel:login": "vercel login",
     "vbminor": "yarn version minor",
-    "vbpatch": "yarn version patch"
+    "vbpatch": "yarn version patch",
+    "gc-build": "graphclient build",
+    "gc-dev": "graphclient serve-dev"
   },
   "dependencies": {
     "@heroicons/react": "~2.1.5",
@@ -39,6 +41,7 @@
     "zustand": "~5.0.0"
   },
   "devDependencies": {
+    "@graphprotocol/client-cli": "^3.0.7",
     "@trivago/prettier-plugin-sort-imports": "~4.3.0",
     "@types/node": "~18.19.50",
     "@types/react": "~18.3.5",

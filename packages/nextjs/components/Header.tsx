@@ -41,6 +41,9 @@ export const menuLinks: HeaderMenuLink[] = [
 export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
   const pathname = usePathname();
 
+  //Debug only
+  //allowAdmin = true;
+
   return (
     <>
       {menuLinks

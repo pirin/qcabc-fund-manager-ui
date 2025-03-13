@@ -21,7 +21,9 @@
     "vercel:yolo": "yarn workspace @qcabc-fund-manager/nextjs vercel:yolo",
     "vercel:login": "yarn workspace @qcabc-fund-manager/nextjs vercel:login",
     "vbminor": "yarn workspace @qcabc-fund-manager/nextjs vbminor",
-    "vbpatch": "yarn workspace @qcabc-fund-manager/nextjs vbpatch"
+    "vbpatch": "yarn workspace @qcabc-fund-manager/nextjs vbpatch",
+    "gc-build": "yarn workspace @qcabc-fund-manager/nextjs gc-build",
+    "gc-dev": "yarn workspace @qcabc-fund-manager/nextjs gc-dev"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {

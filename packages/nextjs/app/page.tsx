@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
+import ShareholderTransactions from "~~/components/ShareholderTransactions";
 import { InputBase } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -21,10 +22,9 @@ const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
 
   const [depositAmount, setDepositAmount] = useState<string>("");
-
   const [sharesToRedeem, setSharesToredeem] = useState<string>("");
-
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(ApprovalStatus.Idle);
+  const [refresh, setRefresh] = useState<boolean>(false);
 
   const { data: sharesOwned, refetch: refetchSharesOwned } = useScaffoldReadContract({
     contractName: "ShareToken",
@@ -96,7 +96,7 @@ const Home: NextPage = () => {
     functionName: "depositToken",
   });
 
-  //Dynamcally construct the approval tranbsaction based on the current deposit token from the FundManager contract
+  //Dynamcally construct the approval transaction based on the current deposit token from the FundManager contract
   const { writeContractAsync, isPending: isApprovalTxnPending } = useWriteContract();
 
   const writeContractApprovalAsyncWithParams = () =>
@@ -110,6 +110,15 @@ const Home: NextPage = () => {
   const writeTx = useTransactor();
 
   const mustApprove = parseUnits(depositAmount, 6) > (allowance || 0);
+
+  const handleRefetchBalance = async () => {
+    try {
+      await refetchBalance();
+      setRefresh(prev => !prev);
+    } catch (error) {
+      console.error("Error refetching data:", error);
+    }
+  };
 
   return (
     <>
@@ -186,11 +195,7 @@ const Home: NextPage = () => {
                         } catch (error) {
                           console.error("Error refetching data:", error);
                         }
-                        try {
-                          await refetchBalance();
-                        } catch (error) {
-                          console.error("Error refetching data:", error);
-                        }
+                        await handleRefetchBalance();
                       } catch (e) {
                         console.error("Error while depositing funds", e);
                       }
@@ -243,11 +248,7 @@ const Home: NextPage = () => {
                         } catch (error) {
                           console.error("Error refetching data:", error);
                         }
-                        try {
-                          await refetchBalance();
-                        } catch (error) {
-                          console.error("Error refetching data:", error);
-                        }
+                        await handleRefetchBalance();
                       } catch (e) {
                         console.error("Error while redeeming funds", e);
                       }
@@ -259,26 +260,28 @@ const Home: NextPage = () => {
               </div>
             )}
           </div>
+          <div className="mt-16 mb-16">
+            <ShareholderTransactions refresh={refresh} shareholderAddress={connectedAddress || ""} />
+          </div>
         </div>
-
         <div className="px-5">
           <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="text-sm">
-              Total Shares: <strong>{totalSupply ? parseFloat(formatUnits(totalSupply, 6)).toFixed(2) : 0}</strong>
-            </p>
             <p className="text-sm">
               Share price: <strong>{sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0}</strong> USDC
             </p>
             <p className="text-sm">
-              Treasury Balance:{" "}
-              <strong>{treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0}</strong> USDC
+              Fund Total Shares: <strong>{totalSupply ? parseFloat(formatUnits(totalSupply, 6)).toFixed(2) : 0}</strong>
             </p>
             <p className="text-sm">
-              Total Fund Value: <strong>{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0}</strong> USDC
+              Fund Total: <strong>{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0}</strong> USDC
             </p>
             <p className="text-sm">
-              Portfolio Value:{" "}
+              Fund Portfolio:{" "}
               <strong>{portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0}</strong> USDC
+            </p>
+            <p className="text-sm">
+              Fund Treasury:{" "}
+              <strong>{treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0}</strong> USDC
             </p>
           </div>
           <div className="text-xs opacity-50 text-center">Portfolio Value as of: {formattedLastPortfolioUpdate}</div>

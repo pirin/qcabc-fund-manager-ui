@@ -1,0 +1,4 @@
+{
+  "a9132e09df18bd3331fc60d1dd1efab66c431dfa5b69fd6478b5ff0ac74fe53d": "query GetShareholder($user: ID!) {\n  shareholder(id: $user) {\n    account\n    shares\n    lastUpdated\n    id\n    redemptions {\n      depositAmount\n      blockTimestamp\n      transactionHash\n      shareTokensRedeemed\n    }\n    deposits {\n      blockTimestamp\n      depositAmount\n      shareTokensMinted\n      transactionHash\n    }\n  }\n}",
+  "60de8ef32cca791f129c5d805eaf21464838054f2e134d7b8b01bd50dd9c43a5": "query GetShareholders {\n  shareholders(orderBy: shares, orderDirection: desc) {\n    account\n    shares\n    deposits {\n      blockTimestamp\n      shareTokensMinted\n      depositAmount\n      transactionHash\n    }\n    redemptions {\n      depositAmount\n      shareTokensRedeemed\n      transactionHash\n      blockTimestamp\n    }\n  }\n}"
+}

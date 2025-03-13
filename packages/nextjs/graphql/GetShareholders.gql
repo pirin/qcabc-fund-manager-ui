@@ -1,0 +1,18 @@
+query GetShareholders {
+  shareholders(orderBy: shares, orderDirection: desc) {
+    account
+    shares
+    deposits {
+      blockTimestamp
+      shareTokensMinted
+      depositAmount
+      transactionHash
+    }
+    redemptions {
+      depositAmount
+      shareTokensRedeemed
+      transactionHash
+      blockTimestamp
+    }
+  }
+}

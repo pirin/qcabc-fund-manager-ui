@@ -42,15 +42,13 @@ yarn start
 
 Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
 
+## Configuring Graph Client
 
-## Documentation
+[Graphclient](https://github.com/graphprotocol/graph-client?tab=readme-ov-file#features-and-goals) is installed using `yarn add -D @graphprotocol/client-cli` createadds an interace to query graphs.
+Define the graph to be queried in `.graphclientrc.yml`
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
+use `$npx graphclient build` to generate client side Typescript Libraries (written to `.graphclient` folder)
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
+use `/graphql/` folder to store queries that will be exposed in the generated Schema
 
-## Contributing to Scaffold-ETH 2
-
-We welcome contributions to Scaffold-ETH 2!
-
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+use `$npx graphclient serve-dev` to run a local client node that can be used to test the graph endpoint 

@@ -1,0 +1,10 @@
+# .graphclientrc.yml
+sources:
+  - name: FundManager
+    handler:
+      graphql:
+        endpoint: https://api.studio.thegraph.com/query/49943/qcabc-fund-manager-graph/version/latest
+
+documents:
+  - ./graphql/GetShareholder.gql
+  - ./graphql/GetShareholders.gql
