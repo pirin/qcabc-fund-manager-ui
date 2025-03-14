@@ -4,7 +4,7 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import ShareholderTransactions from "~~/components/ShareholderTransactions";
 import { InputBase } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
@@ -96,6 +96,12 @@ const Home: NextPage = () => {
     functionName: "depositToken",
   });
 
+  const { data: depositTokenSymbol } = useReadContract({
+    address: depositToken || "",
+    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    functionName: "symbol",
+  });
+
   //Dynamcally construct the approval transaction based on the current deposit token from the FundManager contract
   const { writeContractAsync, isPending: isApprovalTxnPending } = useWriteContract();
 
@@ -131,7 +137,9 @@ const Home: NextPage = () => {
             <p className={"text-red-500"}>{redemtionsAllowed ? "" : "Redemptions are temporary PAUSED!"}</p>
             <p className="text-sm">
               Available to invest:{" "}
-              <strong>{depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0.0} USDC</strong>
+              <strong>
+                {depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0.0} {depositTokenSymbol}
+              </strong>
             </p>
           </div>
         </div>
@@ -146,7 +154,7 @@ const Home: NextPage = () => {
                   <span className="w-40">
                     <InputBase value={depositAmount} onChange={setDepositAmount} placeholder="100" />
                   </span>
-                  USDC
+                  {depositTokenSymbol}
                   <button
                     disabled={!depositBalance}
                     className="btn btn-secondary text-xs h-6 min-h-6"
@@ -264,25 +272,29 @@ const Home: NextPage = () => {
             <ShareholderTransactions refresh={refresh} shareholderAddress={connectedAddress || ""} />
           </div>
         </div>
-        <div className="px-5">
-          <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="text-sm">
-              Share price: <strong>{sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0}</strong> USDC
-            </p>
-            <p className="text-sm">
+        <div>
+          <div className="flex justify-center items-center flex-col py-2 sm:flex-row gap-12">
+            <span className="text-sm">
+              Share price: <strong>{sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0}</strong>{" "}
+              {depositTokenSymbol}
+            </span>
+            <span className="text-sm">
               Fund Total Shares: <strong>{totalSupply ? parseFloat(formatUnits(totalSupply, 6)).toFixed(2) : 0}</strong>
-            </p>
-            <p className="text-sm">
-              Fund Total: <strong>{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0}</strong> USDC
-            </p>
-            <p className="text-sm">
+            </span>
+            <span className="text-sm">
+              Fund Total: <strong>{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0}</strong>{" "}
+              {depositTokenSymbol}
+            </span>
+            <span className="text-sm">
               Fund Portfolio:{" "}
-              <strong>{portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0}</strong> USDC
-            </p>
-            <p className="text-sm">
+              <strong>{portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0}</strong>{" "}
+              {depositTokenSymbol}
+            </span>
+            <span className="text-sm">
               Fund Treasury:{" "}
-              <strong>{treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0}</strong> USDC
-            </p>
+              <strong>{treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0}</strong>{" "}
+              {depositTokenSymbol}
+            </span>
           </div>
           <div className="text-xs opacity-50 text-center">Portfolio Value as of: {formattedLastPortfolioUpdate}</div>
         </div>
