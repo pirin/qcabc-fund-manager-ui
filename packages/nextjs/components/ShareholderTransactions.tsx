@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
+import { ArrowDownCircleIcon, ArrowUpCircleIcon } from "@heroicons/react/24/outline";
 import { GetShareholderDocument, execute } from "~~/.graphclient";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
@@ -88,23 +89,32 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
 
   return (
     <div className="flex justify-center items-center w-full">
-      <table className="table-sm text-gray-400 w-4/12">
-        <tbody>
-          {txnHistory.map((txn: any) => (
-            <tr key={txn.id}>
-              <td className="text-right">
-                {txn.timestamp.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-              </td>
-              <td className="text-left">
-                {txn.type === "deposit"
-                  ? `Deposited ${txn.from} ${depositTokenSymbol} for 
+      <div className="overflow-y-auto w-full rounded-lg">
+        <table className="table-sm text-gray-400 w-full border-base-100">
+          <tbody>
+            {txnHistory.map((txn: any) => (
+              <tr key={txn.id} className="hover:bg-base-200">
+                <td className="text-right p-2 pr-6 w-1/2">
+                  {txn.timestamp.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                </td>
+                <td className="w-min">
+                  {txn.type === "deposit" ? (
+                    <ArrowUpCircleIcon className="h-6 w-6 text-sky-400" />
+                  ) : (
+                    <ArrowDownCircleIcon className="h-6 w-6 text-violet-400" />
+                  )}
+                </td>
+                <td className="text-left p-2 pl-6 w-1/2">
+                  {txn.type === "deposit"
+                    ? `Deposited ${txn.from} ${depositTokenSymbol} for 
                     ${txn.to} shares`
-                  : `Redeemed ${txn.to} shares for ${txn.from} ${depositTokenSymbol}`}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    : `Redeemed ${txn.to} shares for ${txn.from} ${depositTokenSymbol}`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
