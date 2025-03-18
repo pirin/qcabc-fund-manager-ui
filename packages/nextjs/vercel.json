@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/portfolio",
-      "schedule": "0 */8 * * *"
+      "schedule": "0 1 * * *"
     }
   ]
 }
