@@ -5,5 +5,15 @@ export async function GET() {
   const max = 100000;
   const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
 
-  return NextResponse.json({ number: randomNumber * 1000000 });
+  return NextResponse.json(
+    { portfolioValue: randomNumber * 1000000 },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+        "Surrogate-Control": "no-store",
+      },
+    },
+  );
 }
