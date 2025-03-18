@@ -45,7 +45,7 @@ const walletClient = createWalletClient({
 
 export async function GET(req: NextRequest) {
   try {
-    console.info("Starting Portfolio Update...");
+    console.info(`Starting Portfolio Update from ${req.ip}...`);
 
     // Generate random portfolio value (for simulation)
     const { formattedValue, portfolioValue } = getPortfolioValue();
