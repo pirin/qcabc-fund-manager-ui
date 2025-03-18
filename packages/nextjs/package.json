@@ -1,11 +1,11 @@
 {
   "name": "@qcabc-fund-manager/nextjs",
   "private": true,
-  "version": "0.2.17",
+  "version": "0.2.18",
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS='--inspect' next dev",
     "format": "prettier --write . '!(node_modules|.next|contracts)/**/*'",
     "lint": "next lint",
     "serve": "next start",
