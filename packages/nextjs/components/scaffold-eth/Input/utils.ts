@@ -1,3 +1,5 @@
+import { formatUnits } from "viem";
+
 export type CommonInputProps<T = string> = {
   value: T;
   onChange: (newValue: T) => void;
@@ -107,3 +109,14 @@ export const isValidInteger = (dataType: IntegerVariant, value: string) => {
 // Treat any dot-separated string as a potential ENS name
 const ensRegex = /.+\..+/;
 export const isENS = (address = "") => ensRegex.test(address);
+
+export const formatAsCurrency = (amount: bigint | undefined, decimals = 6, currency = "", precision = 2) => {
+  const value = amount ? parseFloat(formatUnits(amount, decimals)) : 0;
+  return (
+    new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    }).format(value) + (currency ? ` ${currency}` : "")
+  );
+};

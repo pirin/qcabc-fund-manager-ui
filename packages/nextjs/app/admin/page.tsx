@@ -6,8 +6,9 @@ import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useReadContract } from "wagmi";
 import ShareholderTable from "~~/components/ShareholdersTable";
-import { AddressInput, InputBase } from "~~/components/scaffold-eth";
+import { AddressInput, InputBase, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
+import { formatAsCurrency } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
@@ -24,10 +25,6 @@ const Admin: NextPage = () => {
     contractName: "FundManager",
     functionName: "portfolioValue",
   });
-
-  const formattedPortfolioValue = (
-    portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0
-  ).toString();
 
   const [newPortfolioValue, setNewPortfolioValue] = useState<string>("");
 
@@ -91,9 +88,7 @@ const Admin: NextPage = () => {
     functionName: "symbol",
   });
 
-  const formattedTreasuryBalance = (
-    treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0
-  ).toString();
+  const formattedTreasuryBalance = formatAsCurrency(treasuryBalance);
 
   const { data: depositToken } = useScaffoldReadContract({
     contractName: "FundManager",
@@ -153,30 +148,39 @@ const Admin: NextPage = () => {
     }
   };
 
+  const settingsRow =
+    "flex justify-between items-center bg-neutral-800 px-4 rounded-s-md space-x-2 flex-col sm:flex-row gap-12";
+
+  const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4 gap-2";
+  const settingsButton = "btn btn-secondary btn-sm";
   return (
     <>
       <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
+        {/* Fund Valuation Section */}
+        <div className={settingsSection}>
           <p className="text-2xl font-bold">Fund Valuation</p>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Share Price</p>
             <p className="flex-1 text-right">
               {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
             </p>
           </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Portfolio Value</p>
             <div className="flex flex-row gap-4 items-center justify-end">
               <span className="w-36">
                 <InputBase
                   value={newPortfolioValue}
-                  onChange={setNewPortfolioValue}
-                  placeholder={formattedPortfolioValue}
+                  onChange={value => {
+                    if (!isValidInteger(IntegerVariant.UINT256, value)) return;
+                    setNewPortfolioValue(value);
+                  }}
+                  placeholder={formatAsCurrency(portfolioValue)}
                 />
               </span>
               USDC
               <button
-                className="btn btn-primary text-lg px-6"
+                className={settingsButton}
                 disabled={!newPortfolioValue}
                 onClick={async () => {
                   try {
@@ -195,29 +199,29 @@ const Admin: NextPage = () => {
               </button>
             </div>
           </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Last portfolio value updated</p>
             <p className="flex-1 text-right"> {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}</p>
-            <button className="btn btn-secondary btn-sm" onClick={refreshPortfolio} disabled={portfolioUpdating}>
+            <button className={settingsButton} onClick={refreshPortfolio} disabled={portfolioUpdating}>
               {!portfolioUpdating ? "Refresh" : <span className="loading loading-spinner loading-xs"></span>}
             </button>
           </div>
 
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Total Fund Value (Deposits Balance + Porfolio Value)</p>
-            <p className="flex-1 text-right">{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0} USDC</p>
+            <p className="flex-1 text-right">{formatAsCurrency(fundValue, 6, "USDC")}</p>
           </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Total Shares</p>
-            <p className="flex-1 text-right">{totalShares ? parseFloat(formatUnits(totalShares, 6)).toFixed(2) : 0}</p>
+            <p className="flex-1 text-right">{formatAsCurrency(totalShares)}</p>
           </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Redemptions</p>
             <span className={redemptionsAllowed ? "text-green-500" : "text-red-500"}>
               {redemptionsAllowed ? "ALLOWED" : "PAUSED"}
             </span>
             <button
-              className="btn btn-secondary btn-sm"
+              className={settingsButton}
               onClick={async () => {
                 try {
                   await writeFundManager({
@@ -237,46 +241,27 @@ const Admin: NextPage = () => {
             </button>
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
-          <p className="text-2xl font-bold">Contract Info</p>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Fund Manager Contract</p>
-            <p className="flex-1 text-right">v{fundManagerVersion}</p>
-            <Address address={fundManagerAddress} />
-          </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Owner</p>
-            <Address address={owner} />
-          </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Share Token</p>
-            <p className="flex-1 text-right">
-              {shareTokenName} ({shareTokenSymbol}) v{shareTokenVersion}
-            </p>
-            <Address address={shareToken} />
-          </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <p className="flex-1 text-left">Deposit Token</p>
-            <p className="flex-1 text-right">
-              {depositTokenName} ({depositTokenSymbol})
-            </p>
-            <Address address={depositToken} />
-          </div>
-        </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
+
+        {/* Deposits Section */}
+        <div className={settingsSection}>
           <p className="text-2xl font-bold">Deposits</p>
 
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Deposits Balance</p>
-            <p className="flex-1 text-right">{formattedTreasuryBalance} USDC</p>
+            <p className="flex-1 text-right">
+              {formattedTreasuryBalance} {depositTokenSymbol}
+            </p>
           </div>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Transfer deposits to the Fund Investment Wallet</p>
             <div className="flex flex-row gap-4 items-center justify-end">
               <span className="w-36">
                 <InputBase
                   value={treasuryToAmount}
-                  onChange={setTreasuryToAmount}
+                  onChange={value => {
+                    if (!isValidInteger(IntegerVariant.UINT256, value)) return;
+                    setTreasuryToAmount(value);
+                  }}
                   placeholder={formattedTreasuryBalance}
                 />
               </span>
@@ -291,9 +276,9 @@ const Admin: NextPage = () => {
               >
                 Max
               </button>
-              USDC
+              {depositTokenSymbol}
               <button
-                className="btn btn-primary text-lg px-6"
+                className={settingsButton}
                 disabled={!treasuryToAmount}
                 onClick={async () => {
                   try {
@@ -313,9 +298,11 @@ const Admin: NextPage = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
+
+        {/* Portfolio Fund Value Section */}
+        <div className={settingsSection}>
           <p className="text-2xl font-bold">Portfolio Fund Value Updater Whitelisting</p>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
+          <div className={settingsRow}>
             <p className="flex-1 text-left">Address to Whitelist</p>
             <span className="flex flex-row gap-4 items-center">
               <span className="w-96">
@@ -326,7 +313,7 @@ const Admin: NextPage = () => {
                 />
               </span>
               <button
-                className="btn btn-primary text-lg px-6"
+                className={settingsButton}
                 disabled={!updaterWhitelistAddress}
                 onClick={async () => {
                   try {
@@ -345,12 +332,37 @@ const Admin: NextPage = () => {
             </span>
           </div>
         </div>
-        <div className="flex flex-col mx-auto bg-base-100 w-full rounded-md px-8 pb-4">
-          <p className="text-2xl font-bold">Shareholders</p>
-          <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
-            <ShareholderTable />
+
+        {/* Contract Info Section */}
+        <div className={settingsSection}>
+          <p className="text-2xl font-bold">Contract Info</p>
+          <div className={settingsRow}>
+            <p className="flex-1 text-left">Fund Manager Contract</p>
+            <p className="flex-1 text-right">v{fundManagerVersion}</p>
+            <Address address={fundManagerAddress} />
+          </div>
+          <div className={settingsRow}>
+            <p className="flex-1 text-left">Owner</p>
+            <Address address={owner} />
+          </div>
+          <div className={settingsRow}>
+            <p className="flex-1 text-left">Share Token</p>
+            <p className="flex-1 text-right">
+              {shareTokenName} ({shareTokenSymbol}) v{shareTokenVersion}
+            </p>
+            <Address address={shareToken} />
+          </div>
+          <div className={settingsRow}>
+            <p className="flex-1 text-left">Deposit Token</p>
+            <p className="flex-1 text-right">
+              {depositTokenName} ({depositTokenSymbol})
+            </p>
+            <Address address={depositToken} />
           </div>
         </div>
+        {/* Shareholders Section */}
+
+        <ShareholderTable />
       </div>
     </>
   );

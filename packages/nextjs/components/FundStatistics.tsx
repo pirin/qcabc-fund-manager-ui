@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
+import { formatAsCurrency } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
@@ -91,23 +91,19 @@ const FundStatistics = ({ refresh }: FundStatisticsProps) => {
     <div>
       <div className="flex justify-center items-center flex-col py-2 sm:flex-row gap-12">
         <span className="text-sm">
-          Share price: <strong>{sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0}</strong>{" "}
-          {depositTokenSymbol}
+          Share price: <strong>{formatAsCurrency(sharePrice, 6, depositTokenSymbol)}</strong>
         </span>
         <span className="text-sm">
-          Fund Total Shares: <strong>{totalSupply ? parseFloat(formatUnits(totalSupply, 6)).toFixed(2) : 0}</strong>
+          Fund Total Shares: <strong>{formatAsCurrency(totalSupply, 6, "", 0)}</strong>
         </span>
         <span className="text-sm">
-          Fund Total: <strong>{fundValue ? parseFloat(formatUnits(fundValue, 6)).toFixed(2) : 0}</strong>{" "}
-          {depositTokenSymbol}
+          Fund Total: <strong>{formatAsCurrency(fundValue, 6, depositTokenSymbol, 0)}</strong>
         </span>
         <span className="text-sm">
-          Fund Portfolio: <strong>{portfolioValue ? parseFloat(formatUnits(portfolioValue, 6)).toFixed(2) : 0}</strong>{" "}
-          {depositTokenSymbol}
+          Fund Portfolio: <strong>{formatAsCurrency(portfolioValue, 6, depositTokenSymbol, 0)}</strong>
         </span>
         <span className="text-sm">
-          Fund Treasury: <strong>{treasuryBalance ? parseFloat(formatUnits(treasuryBalance, 6)).toFixed(2) : 0}</strong>{" "}
-          {depositTokenSymbol}
+          Fund Treasury: <strong>{formatAsCurrency(treasuryBalance, 6, depositTokenSymbol, 0)}</strong>{" "}
         </span>
       </div>
       <div className="text-xs opacity-50 text-center pb-2">

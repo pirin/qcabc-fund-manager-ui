@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatUnits } from "viem";
 import { GetShareholdersDocument, execute } from "~~/.graphclient";
 import { Address } from "~~/components/scaffold-eth";
+import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 const ShareholdersTable = () => {
@@ -54,7 +54,7 @@ const ShareholdersTable = () => {
                 <td>
                   <Address address={shareholder?.account} format="long" />
                 </td>
-                <td className="text-right">{parseFloat(formatUnits(shareholder?.shares, 6)).toFixed(2)}</td>
+                <td className="text-right">{formatAsCurrency(shareholder?.shares)}</td>
               </tr>
             ))}
           </tbody>
@@ -62,9 +62,7 @@ const ShareholdersTable = () => {
             <tr className="rounded-md text-base">
               <th className="bg-primary"></th>
               <th className="bg-primary text-right">Total Shares:</th>
-              <th className="bg-primary text-right">
-                {totalShares ? parseFloat(formatUnits(totalShares, 6)).toFixed(2) : 0}
-              </th>
+              <th className="bg-primary text-right">{formatAsCurrency(totalShares)}</th>
             </tr>
           </tfoot>
         </table>

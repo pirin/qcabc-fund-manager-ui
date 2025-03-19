@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatUnits } from "viem";
+import { formatAsCurrency } from "./scaffold-eth";
 import { useReadContract } from "wagmi";
 import { ArrowDownCircleIcon, ArrowUpCircleIcon } from "@heroicons/react/24/outline";
 import { GetShareholderDocument, execute } from "~~/.graphclient";
@@ -44,15 +44,15 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
           ...(result?.shareholder?.deposits || []).map((txn: any) => ({
             timestamp: new Date(txn.blockTimestamp * 1000), // Convert Unix timestamp to local datetime
             type: "deposit",
-            from: parseFloat(formatUnits(txn.depositAmount, 6)).toFixed(2),
-            to: parseFloat(formatUnits(txn.shareTokensMinted, 6)).toFixed(2),
+            from: formatAsCurrency(txn.depositAmount),
+            to: formatAsCurrency(txn.shareTokensMinted),
             id: txn.transactionHash,
           })),
           ...(result?.shareholder?.redemptions || []).map((txn: any) => ({
             timestamp: new Date(txn.blockTimestamp * 1000), // Convert Unix timestamp to local datetime
             type: "redemption",
-            from: parseFloat(formatUnits(txn.shareTokensRedeemed, 6)).toFixed(2),
-            to: parseFloat(formatUnits(txn.depositAmount, 6)).toFixed(2),
+            from: formatAsCurrency(txn.shareTokensRedeemed),
+            to: formatAsCurrency(txn.depositAmount),
             id: txn.transactionHash,
           })),
         ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -74,7 +74,7 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
   }
 
   if (txnHistory.length === 0) {
-    console.log("No transactions found");
+    //console.log("No transactions found");
     return null;
   }
 

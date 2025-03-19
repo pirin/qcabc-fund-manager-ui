@@ -8,7 +8,7 @@ import ConnectWalletMessage from "~~/components/ConnectWalletMessage";
 import FundStatistics from "~~/components/FundStatistics";
 import NoDepositTokensMessage from "~~/components/NoDepositTokensMessage";
 import ShareholderTransactions from "~~/components/ShareholderTransactions";
-import { IntegerInput, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
+import { IntegerInput, IntegerVariant, formatAsCurrency, isValidInteger } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
@@ -204,10 +204,7 @@ const Home: NextPage = () => {
                       ) : mustApprove ? (
                         "Before depositing, you need to first 'Approve' your deposit"
                       ) : (
-                        <span>
-                          {depositBalance ? parseFloat(formatUnits(depositBalance, 6)).toFixed(2) : 0.0}{" "}
-                          {depositTokenSymbol} is available for deposit
-                        </span>
+                        <span>{`${formatAsCurrency(depositBalance, 6, depositTokenSymbol, 0)} is available for deposit`}</span>
                       )}
                     </div>
                   </>
@@ -289,8 +286,8 @@ const Home: NextPage = () => {
                       <span className=" text-red-500">{redeemError}</span>
                     ) : (
                       <span>
-                        {sharesOwned ? parseFloat(formatUnits(sharesOwned, 6)).toFixed(2) : 0} shares available for
-                        redemption
+                        {`${formatAsCurrency(sharesOwned)}  shares are available for
+                        redemption`}
                       </span>
                     )}
                   </div>
