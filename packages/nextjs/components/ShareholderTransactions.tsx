@@ -32,8 +32,6 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
     functionName: "symbol",
   });
 
-  console.log(`Shareholder Address ${shareholderAddress}`);
-
   useEffect(() => {
     const fetchData = async () => {
       if (!execute || !GetShareholderDocument) {
@@ -41,7 +39,6 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
       }
       try {
         const { data: result } = await execute(GetShareholderDocument, { user: shareholderAddress });
-        console.log(result);
 
         const sortedTransactionRecords = [
           ...(result?.shareholder?.deposits || []).map((txn: any) => ({
@@ -61,7 +58,6 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
         ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         setTxnHistory(sortedTransactionRecords);
-        console.log(sortedTransactionRecords);
       } catch (err) {
         setError(err);
       } finally {

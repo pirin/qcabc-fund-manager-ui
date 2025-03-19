@@ -110,7 +110,12 @@ const FundStatistics = ({ refresh }: FundStatisticsProps) => {
           {depositTokenSymbol}
         </span>
       </div>
-      <div className="text-xs opacity-50 text-center pb-2">Portfolio Value as of: {formattedLastPortfolioUpdate}</div>
+      <div className="text-xs opacity-50 text-center pb-2">
+        Portfolio updated{" "}
+        <span title={lastPortfolioUpdate ? new Date(Number(lastPortfolioUpdate) * 1000).toLocaleString() : "N/A"}>
+          {formattedLastPortfolioUpdate}
+        </span>
+      </div>
     </div>
   );
 };

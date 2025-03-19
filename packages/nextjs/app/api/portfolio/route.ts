@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createWalletClient, http } from "viem";
+import { getPortfolioValue } from "./getPortfolioValue";
+import { createPublicClient, createWalletClient, http, parseEventLogs } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
 import deployedContracts from "~~/contracts/deployedContracts";
@@ -43,6 +44,11 @@ const walletClient = createWalletClient({
   transport: http(rpcUrl),
 });
 
+const publicClient = createPublicClient({
+  chain: chain,
+  transport: http(),
+});
+
 export async function GET(req: NextRequest) {
   try {
     console.info(`Starting Portfolio Update from ${req.ip}...`);
@@ -56,6 +62,7 @@ export async function GET(req: NextRequest) {
 
     // Only try to update the contract if we have valid contract info
     let txHash = null;
+    let logs = null;
     if (fundManagerAddress && fundManagerAbi) {
       // Send transaction to update portfolio value on-chain
       txHash = await walletClient.writeContract({
@@ -64,6 +71,23 @@ export async function GET(req: NextRequest) {
         functionName: "setPortfolioValue",
         args: [formattedValue],
       });
+
+      // Wait for transaction receipt and extract logs
+      console.info(`Waiting for transaction receipt...`);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+
+      const logs = parseEventLogs({
+        abi: fundManagerAbi,
+        logs: receipt.logs,
+      }).map(log => {
+        return {
+          event: log.eventName,
+          args: log.args,
+        };
+      });
+
+      console.info(`Transaction confirmed with ${logs.length} logs`);
+      console.info(logs);
     }
 
     console.info(`Published!`);
@@ -74,6 +98,7 @@ export async function GET(req: NextRequest) {
       portfolioValue,
       timestamp,
       txHash,
+      logEntries: logs,
       onChainUpdateSuccess: !!txHash,
     });
   } catch (error) {
@@ -87,15 +112,4 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-function getPortfolioValue() {
-  const min = 10000;
-  const max = 100000;
-  const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-  const portfolioValue = randomNumber * 1000000;
-
-  // Format value with proper decimals (USDC has 6 decimals)
-  const formattedValue = BigInt(portfolioValue);
-  return { formattedValue, portfolioValue };
 }

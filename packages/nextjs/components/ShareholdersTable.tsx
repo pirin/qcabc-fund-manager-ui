@@ -23,7 +23,6 @@ const ShareholdersTable = () => {
       try {
         const { data: result } = await execute(GetShareholdersDocument, {});
         setShareholdersData(result);
-        console.log(result);
       } catch (err) {
         setError(err);
       } finally {

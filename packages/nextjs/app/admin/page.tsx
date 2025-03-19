@@ -117,6 +117,8 @@ const Admin: NextPage = () => {
     functionName: "symbol",
   });
 
+  const [portfolioUpdating, setPortfolioUpdating] = useState(false);
+
   function refetchFundValuations() {
     try {
       refetchPortfolioValue();
@@ -128,6 +130,28 @@ const Admin: NextPage = () => {
       console.error("Error while refreshing data after updating portfolio value", e);
     }
   }
+
+  const refreshPortfolio = async () => {
+    try {
+      console.log("Starting portfolio refresh...");
+      setPortfolioUpdating(true);
+      const result = await fetch("/api/portfolio", {
+        method: "GET",
+      });
+      if (result.ok) {
+        const data = await result.json();
+        console.log("Portfolio updated successfully", data);
+        setNewPortfolioValue("");
+        refetchFundValuations();
+      } else {
+        console.error("Error updating portfolio", result);
+      }
+      setPortfolioUpdating(false);
+    } catch (error) {
+      console.error("Failed to refresh portfolio!", error);
+      setPortfolioUpdating(false);
+    }
+  };
 
   return (
     <>
@@ -173,7 +197,10 @@ const Admin: NextPage = () => {
           </div>
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
             <p className="flex-1 text-left">Last portfolio value updated</p>
-            <p className="flex-1 text-right">{formattedLastPortfolioUpdate}</p>
+            <p className="flex-1 text-right"> {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}</p>
+            <button className="btn btn-secondary btn-sm" onClick={refreshPortfolio} disabled={portfolioUpdating}>
+              {!portfolioUpdating ? "Refresh" : <span className="loading loading-spinner loading-xs"></span>}
+            </button>
           </div>
 
           <div className="flex justify-between items-center space-x-2 flex-col sm:flex-row gap-12">
@@ -190,7 +217,7 @@ const Admin: NextPage = () => {
               {redemptionsAllowed ? "ALLOWED" : "PAUSED"}
             </span>
             <button
-              className="btn btn-primary text-lg px-6"
+              className="btn btn-secondary btn-sm"
               onClick={async () => {
                 try {
                   await writeFundManager({
