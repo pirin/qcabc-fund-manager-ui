@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
       console.info(`Waiting for transaction receipt...`);
       const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      const logs = parseEventLogs({
+      logs = parseEventLogs({
         abi: fundManagerAbi,
         logs: receipt.logs,
       }).map(log => {

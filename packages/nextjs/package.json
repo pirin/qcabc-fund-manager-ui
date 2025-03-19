@@ -1,7 +1,7 @@
 {
   "name": "@qcabc-fund-manager/nextjs",
   "private": true,
-  "version": "0.2.22",
+  "version": "0.2.23",
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
