@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TransactionHashLink } from "./TransactionHashLink";
 import { formatAsCurrency } from "./scaffold-eth";
 import { useReadContract } from "wagmi";
 import { ArrowDownCircleIcon, ArrowUpCircleIcon } from "@heroicons/react/24/outline";
@@ -45,13 +46,13 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
             timestamp: new Date(txn.blockTimestamp * 1000), // Convert Unix timestamp to local datetime
             type: "deposit",
             from: formatAsCurrency(txn.depositAmount),
-            to: formatAsCurrency(txn.shareTokensMinted),
+            to: formatAsCurrency(txn.shareTokensMinted, 6, "shares"),
             id: txn.transactionHash,
           })),
           ...(result?.shareholder?.redemptions || []).map((txn: any) => ({
             timestamp: new Date(txn.blockTimestamp * 1000), // Convert Unix timestamp to local datetime
             type: "redemption",
-            from: formatAsCurrency(txn.shareTokensRedeemed),
+            from: formatAsCurrency(txn.shareTokensRedeemed, 6, "shares"),
             to: formatAsCurrency(txn.depositAmount),
             id: txn.transactionHash,
           })),
@@ -85,32 +86,33 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
 
   return (
     <div className="flex justify-center items-center w-full">
-      <div className="overflow-y-auto w-full rounded-lg">
-        <table className="table-sm text-gray-400 w-full border-base-100">
-          <tbody>
-            {txnHistory.map((txn: any) => (
-              <tr key={txn.id} className="hover:bg-base-200">
-                <td className="text-right p-2 pr-6 w-1/2">
-                  {txn.timestamp.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                </td>
-                <td className="w-min">
-                  {txn.type === "deposit" ? (
-                    <ArrowUpCircleIcon className="h-6 w-6 text-sky-400" />
-                  ) : (
-                    <ArrowDownCircleIcon className="h-6 w-6 text-violet-400" />
-                  )}
-                </td>
-                <td className="text-left p-2 pl-6 w-1/2">
-                  {txn.type === "deposit"
-                    ? `Deposited ${txn.from} ${depositTokenSymbol} for 
+      <table className="table-sm w-full">
+        <tbody>
+          {txnHistory.map((txn: any) => (
+            <tr key={txn.id}>
+              <td>
+                {txn.type === "deposit" ? (
+                  <ArrowUpCircleIcon className="h-6 w-6 text-sky-400" />
+                ) : (
+                  <ArrowDownCircleIcon className="h-6 w-6 text-violet-400" />
+                )}
+              </td>
+              <td className="whitespace-nowrap">
+                {txn.timestamp.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+              </td>
+              <td className="w-full">
+                {txn.type === "deposit"
+                  ? `Deposited ${txn.from} ${depositTokenSymbol} for 
                     ${txn.to} shares`
-                    : `Redeemed ${txn.to} shares for ${txn.from} ${depositTokenSymbol}`}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  : `Redeemed ${txn.from} for ${txn.to} ${depositTokenSymbol}`}
+              </td>
+              <td>
+                <TransactionHashLink txHash={txn.id} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
