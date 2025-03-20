@@ -37,7 +37,7 @@ const ShareholdersTable = () => {
   }
 
   return (
-    <div className="flex justify-center bg-neutral-800 rounded-s-md p-4 w-full">
+    <div className="flex justify-center bg-base-200 rounded-s-md p-4 w-full">
       <table className="table-sm w-full">
         <thead>
           <tr className="text-sm text-center border-b border-base-content">

@@ -156,7 +156,7 @@ const Admin: NextPage = () => {
   };
 
   const settingsRow =
-    "flex justify-between items-center bg-neutral-800 px-4 rounded-s-md space-x-2 flex-col sm:flex-row gap-12";
+    "flex justify-between bg-base-200 items-center px-4 rounded-s-md space-x-2 flex-col sm:flex-row gap-12";
 
   const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4 gap-2";
   const settingsButton = "btn btn-secondary btn-sm";
