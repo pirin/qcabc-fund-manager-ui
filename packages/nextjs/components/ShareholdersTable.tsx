@@ -37,36 +37,34 @@ const ShareholdersTable = () => {
   }
 
   return (
-    <div className="flex justify-center items-center w-full">
-      <div className="overflow-x-auto rounded-md w-fill">
-        <table className="table bg-base-100 table-zebra">
-          <thead>
-            <tr className="rounded-md text-base">
-              <th className="bg-primary"></th>
-              <th className="bg-primary">Shareholder</th>
-              <th className="bg-primary">Shares</th>
+    <div className="flex justify-center bg-neutral-800 rounded-s-md p-4 w-full">
+      <table className="table-sm w-full">
+        <thead>
+          <tr className="text-sm text-center border-b border-base-content">
+            <th></th>
+            <th></th>
+            <th className="text-right">Shares</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ShareholdersData?.shareholders?.map((shareholder: any, index: number) => (
+            <tr key={shareholder.account}>
+              <th>{index + 1}</th>
+              <td>
+                <Address address={shareholder?.account} format="long" />
+              </td>
+              <td className="text-right">{formatAsCurrency(shareholder?.shares)}</td>
             </tr>
-          </thead>
-          <tbody>
-            {ShareholdersData?.shareholders?.map((shareholder: any, index: number) => (
-              <tr key={shareholder.account}>
-                <th>{index + 1}</th>
-                <td>
-                  <Address address={shareholder?.account} format="long" />
-                </td>
-                <td className="text-right">{formatAsCurrency(shareholder?.shares)}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="rounded-md text-base">
-              <th className="bg-primary"></th>
-              <th className="bg-primary text-right">Total Shares:</th>
-              <th className="bg-primary text-right">{formatAsCurrency(totalShares)}</th>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td className="text-right">Total Shares:</td>
+            <td className="text-right border-t-2 border-base-content">{formatAsCurrency(totalShares)}</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   );
 };

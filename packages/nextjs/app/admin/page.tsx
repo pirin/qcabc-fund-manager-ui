@@ -10,7 +10,12 @@ import { AddressInput, InputBase, IntegerVariant, isValidInteger } from "~~/comp
 import { Address } from "~~/components/scaffold-eth";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
-import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import {
+  useDeployedContractInfo,
+  useScaffoldReadContract,
+  useScaffoldWriteContract,
+  useSiteAdmins,
+} from "~~/hooks/scaffold-eth";
 
 const Admin: NextPage = () => {
   const { data: shareTokenVersion } = useScaffoldReadContract({
@@ -114,6 +119,8 @@ const Admin: NextPage = () => {
 
   const [portfolioUpdating, setPortfolioUpdating] = useState(false);
 
+  const { allowAdmin } = useSiteAdmins();
+
   function refetchFundValuations() {
     try {
       refetchPortfolioValue();
@@ -155,215 +162,224 @@ const Admin: NextPage = () => {
   const settingsButton = "btn btn-secondary btn-sm";
   return (
     <>
-      <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
-        {/* Fund Valuation Section */}
-        <div className={settingsSection}>
-          <p className="text-2xl font-bold">Fund Valuation</p>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Share Price</p>
-            <p className="flex-1 text-right">
-              {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
-            </p>
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Portfolio Value</p>
-            <div className="flex flex-row gap-4 items-center justify-end">
-              <span className="w-36">
-                <InputBase
-                  value={newPortfolioValue}
-                  onChange={value => {
-                    if (!isValidInteger(IntegerVariant.UINT256, value)) return;
-                    setNewPortfolioValue(value);
+      {allowAdmin ? (
+        <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
+          {/* Fund Valuation Section */}
+          <div className={settingsSection}>
+            <p className="text-2xl font-bold">Fund Valuation</p>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Share Price</p>
+              <p className="flex-1 text-right">
+                {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
+              </p>
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Portfolio Value</p>
+              <div className="flex flex-row gap-4 items-center justify-end">
+                <span className="w-36">
+                  <InputBase
+                    value={newPortfolioValue}
+                    onChange={value => {
+                      if (!isValidInteger(IntegerVariant.UINT256, value)) return;
+                      setNewPortfolioValue(value);
+                    }}
+                    placeholder={formatAsCurrency(portfolioValue)}
+                  />
+                </span>
+                USDC
+                <button
+                  className={settingsButton}
+                  disabled={!newPortfolioValue}
+                  onClick={async () => {
+                    try {
+                      await writeFundManager({
+                        functionName: "setPortfolioValue",
+                        args: [parseUnits(newPortfolioValue, 6)],
+                      });
+                      setNewPortfolioValue("");
+                      refetchFundValuations();
+                    } catch (e) {
+                      console.error("Error while updating portfolio value", e);
+                    }
                   }}
-                  placeholder={formatAsCurrency(portfolioValue)}
-                />
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Last portfolio value updated</p>
+              <p className="flex-1 text-right"> {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}</p>
+              <button className={settingsButton} onClick={refreshPortfolio} disabled={portfolioUpdating}>
+                {!portfolioUpdating ? "Refresh" : <span className="loading loading-spinner loading-xs"></span>}
+              </button>
+            </div>
+
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Total Fund Value (Deposits Balance + Porfolio Value)</p>
+              <p className="flex-1 text-right">{formatAsCurrency(fundValue, 6, "USDC")}</p>
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Total Shares</p>
+              <p className="flex-1 text-right">{formatAsCurrency(totalShares)}</p>
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Redemptions</p>
+              <span className={redemptionsAllowed ? "text-green-500" : "text-red-500"}>
+                {redemptionsAllowed ? "ALLOWED" : "PAUSED"}
               </span>
-              USDC
               <button
                 className={settingsButton}
-                disabled={!newPortfolioValue}
                 onClick={async () => {
                   try {
                     await writeFundManager({
-                      functionName: "setPortfolioValue",
-                      args: [parseUnits(newPortfolioValue, 6)],
+                      functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions",
                     });
-                    setNewPortfolioValue("");
-                    refetchFundValuations();
+                    try {
+                      refetchRedemptions(); // refresh the redemptionsAllowed state
+                    } catch (e) {
+                      console.error("Error while refreshing redemptions state", e);
+                    }
                   } catch (e) {
-                    console.error("Error while updating portfolio value", e);
+                    console.error("Error while pausing/resuming redemptions", e);
                   }
                 }}
               >
-                Update
+                {redemptionsAllowed ? "Pause Redemptions" : "Resume  Redemptions"}
               </button>
             </div>
           </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Last portfolio value updated</p>
-            <p className="flex-1 text-right"> {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}</p>
-            <button className={settingsButton} onClick={refreshPortfolio} disabled={portfolioUpdating}>
-              {!portfolioUpdating ? "Refresh" : <span className="loading loading-spinner loading-xs"></span>}
-            </button>
-          </div>
 
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Total Fund Value (Deposits Balance + Porfolio Value)</p>
-            <p className="flex-1 text-right">{formatAsCurrency(fundValue, 6, "USDC")}</p>
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Total Shares</p>
-            <p className="flex-1 text-right">{formatAsCurrency(totalShares)}</p>
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Redemptions</p>
-            <span className={redemptionsAllowed ? "text-green-500" : "text-red-500"}>
-              {redemptionsAllowed ? "ALLOWED" : "PAUSED"}
-            </span>
-            <button
-              className={settingsButton}
-              onClick={async () => {
-                try {
-                  await writeFundManager({
-                    functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions",
-                  });
-                  try {
-                    refetchRedemptions(); // refresh the redemptionsAllowed state
-                  } catch (e) {
-                    console.error("Error while refreshing redemptions state", e);
-                  }
-                } catch (e) {
-                  console.error("Error while pausing/resuming redemptions", e);
-                }
-              }}
-            >
-              {redemptionsAllowed ? "Pause Redemptions" : "Resume  Redemptions"}
-            </button>
-          </div>
-        </div>
+          {/* Deposits Section */}
+          <div className={settingsSection}>
+            <p className="text-2xl font-bold">Deposits</p>
 
-        {/* Deposits Section */}
-        <div className={settingsSection}>
-          <p className="text-2xl font-bold">Deposits</p>
-
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Deposits Balance</p>
-            <p className="flex-1 text-right">
-              {formattedTreasuryBalance} {depositTokenSymbol}
-            </p>
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Transfer deposits to the Fund Investment Wallet</p>
-            <div className="flex flex-row gap-4 items-center justify-end">
-              <span className="w-36">
-                <InputBase
-                  value={treasuryToAmount}
-                  onChange={value => {
-                    if (!isValidInteger(IntegerVariant.UINT256, value)) return;
-                    setTreasuryToAmount(value);
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Deposits Balance</p>
+              <p className="flex-1 text-right">
+                {formattedTreasuryBalance} {depositTokenSymbol}
+              </p>
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Transfer deposits to the Fund Investment Wallet</p>
+              <div className="flex flex-row gap-4 items-center justify-end">
+                <span className="w-36">
+                  <InputBase
+                    value={treasuryToAmount}
+                    onChange={value => {
+                      if (!isValidInteger(IntegerVariant.UINT256, value)) return;
+                      setTreasuryToAmount(value);
+                    }}
+                    placeholder={formattedTreasuryBalance}
+                  />
+                </span>
+                <button
+                  disabled={!treasuryBalance}
+                  className="btn btn-secondary text-xs h-6 min-h-6"
+                  onClick={() => {
+                    if (treasuryBalance) {
+                      setTreasuryToAmount(formatUnits(treasuryBalance, 6));
+                    }
                   }}
-                  placeholder={formattedTreasuryBalance}
-                />
+                >
+                  Max
+                </button>
+                {depositTokenSymbol}
+                <button
+                  className={settingsButton}
+                  disabled={!treasuryToAmount}
+                  onClick={async () => {
+                    try {
+                      await writeFundManager({
+                        functionName: "investFunds",
+                        args: [owner, parseUnits(treasuryToAmount, 6)],
+                      });
+                      setTreasuryToAmount("");
+                      refetchFundValuations();
+                    } catch (e) {
+                      console.error("Error while sending treasury funds", e);
+                    }
+                  }}
+                >
+                  Transfer
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Portfolio Fund Value Section */}
+          <div className={settingsSection}>
+            <p className="text-2xl font-bold">Portfolio Fund Value Updater Whitelisting</p>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Address to Whitelist</p>
+              <span className="flex flex-row gap-4 items-center">
+                <span className="w-96">
+                  <AddressInput
+                    value={updaterWhitelistAddress}
+                    onChange={setUpdaterWhitelistAddress}
+                    placeholder="Address to Whitelist"
+                  />
+                </span>
+                <button
+                  className={settingsButton}
+                  disabled={!updaterWhitelistAddress}
+                  onClick={async () => {
+                    try {
+                      await writeFundManager({
+                        functionName: "addToPortfolioUpdatersWhitelist",
+                        args: [updaterWhitelistAddress],
+                      });
+                      setTreasuryToAmount("");
+                    } catch (e) {
+                      console.error("Error while sending treasury funds", e);
+                    }
+                  }}
+                >
+                  Whitelist
+                </button>
               </span>
-              <button
-                disabled={!treasuryBalance}
-                className="btn btn-secondary text-xs h-6 min-h-6"
-                onClick={() => {
-                  if (treasuryBalance) {
-                    setTreasuryToAmount(formatUnits(treasuryBalance, 6));
-                  }
-                }}
-              >
-                Max
-              </button>
-              {depositTokenSymbol}
-              <button
-                className={settingsButton}
-                disabled={!treasuryToAmount}
-                onClick={async () => {
-                  try {
-                    await writeFundManager({
-                      functionName: "investFunds",
-                      args: [owner, parseUnits(treasuryToAmount, 6)],
-                    });
-                    setTreasuryToAmount("");
-                    refetchFundValuations();
-                  } catch (e) {
-                    console.error("Error while sending treasury funds", e);
-                  }
-                }}
-              >
-                Transfer
-              </button>
+            </div>
+          </div>
+
+          {/* Shareholders Section */}
+          <div className={settingsSection}>
+            <p className="text-2xl font-bold">Shareholders</p>
+            <ShareholderTable />
+          </div>
+
+          {/* Contract Info Section */}
+          <div className={settingsSection}>
+            <p className="text-2xl font-bold">Contract Info</p>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Fund Manager Contract</p>
+              <p className="flex-1 text-right">v{fundManagerVersion}</p>
+              <Address address={fundManagerAddress} />
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Owner</p>
+              <Address address={owner} />
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Share Token</p>
+              <p className="flex-1 text-right">
+                {shareTokenName} ({shareTokenSymbol}) v{shareTokenVersion}
+              </p>
+              <Address address={shareToken} />
+            </div>
+            <div className={settingsRow}>
+              <p className="flex-1 text-left">Deposit Token</p>
+              <p className="flex-1 text-right">
+                {depositTokenName} ({depositTokenSymbol})
+              </p>
+              <Address address={depositToken} />
             </div>
           </div>
         </div>
-
-        {/* Portfolio Fund Value Section */}
-        <div className={settingsSection}>
-          <p className="text-2xl font-bold">Portfolio Fund Value Updater Whitelisting</p>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Address to Whitelist</p>
-            <span className="flex flex-row gap-4 items-center">
-              <span className="w-96">
-                <AddressInput
-                  value={updaterWhitelistAddress}
-                  onChange={setUpdaterWhitelistAddress}
-                  placeholder="Address to Whitelist"
-                />
-              </span>
-              <button
-                className={settingsButton}
-                disabled={!updaterWhitelistAddress}
-                onClick={async () => {
-                  try {
-                    await writeFundManager({
-                      functionName: "addToPortfolioUpdatersWhitelist",
-                      args: [updaterWhitelistAddress],
-                    });
-                    setTreasuryToAmount("");
-                  } catch (e) {
-                    console.error("Error while sending treasury funds", e);
-                  }
-                }}
-              >
-                Whitelist
-              </button>
-            </span>
-          </div>
+      ) : (
+        <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
+          <p className="text-2xl text-center font-bold">Sorry, you are not an admin!</p>
         </div>
-
-        {/* Contract Info Section */}
-        <div className={settingsSection}>
-          <p className="text-2xl font-bold">Contract Info</p>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Fund Manager Contract</p>
-            <p className="flex-1 text-right">v{fundManagerVersion}</p>
-            <Address address={fundManagerAddress} />
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Owner</p>
-            <Address address={owner} />
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Share Token</p>
-            <p className="flex-1 text-right">
-              {shareTokenName} ({shareTokenSymbol}) v{shareTokenVersion}
-            </p>
-            <Address address={shareToken} />
-          </div>
-          <div className={settingsRow}>
-            <p className="flex-1 text-left">Deposit Token</p>
-            <p className="flex-1 text-right">
-              {depositTokenName} ({depositTokenSymbol})
-            </p>
-            <Address address={depositToken} />
-          </div>
-        </div>
-        {/* Shareholders Section */}
-
-        <ShareholderTable />
-      </div>
+      )}
     </>
   );
 };

@@ -4,13 +4,10 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { baseSepolia, hardhat } from "viem/chains";
-import { useAccount } from "wagmi";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
-import { DepositTokenFaucetButton } from "~~/components/DepositTokenFaucetButton";
-import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
-import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
-import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { useOutsideClick } from "~~/hooks/scaffold-eth";
+import { useSiteAdmins } from "~~/hooks/scaffold-eth";
 
 type HeaderMenuLink = {
   label: string;
@@ -41,9 +38,6 @@ export const menuLinks: HeaderMenuLink[] = [
 export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
   const pathname = usePathname();
 
-  //Debug only
-  //allowAdmin = true;
-
   return (
     <>
       {menuLinks
@@ -73,8 +67,8 @@ export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
  * Site header
  */
 export const Header = () => {
-  const { targetNetwork } = useTargetNetwork();
-  const isLocalNetwork = targetNetwork.id === hardhat.id || targetNetwork.id === baseSepolia.id;
+  //const { targetNetwork } = useTargetNetwork();
+  //const isLocalNetwork = targetNetwork.id === hardhat.id || targetNetwork.id === baseSepolia.id;
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const burgerMenuRef = useRef<HTMLDivElement>(null);
@@ -83,17 +77,7 @@ export const Header = () => {
     useCallback(() => setIsDrawerOpen(false), []),
   );
 
-  const { address: connectedAddress } = useAccount();
-
-  const { data: owner } = useScaffoldReadContract({
-    contractName: "FundManager",
-    functionName: "owner",
-  });
-
-  // Admins are the owner of the contract and the manager keys
-  const admins = owner ? [owner] : [];
-  admins.push(...(process.env.NEXT_PUBLIC_MANAGER_KEYS?.split(",") || []));
-  const allowAdmin = !!admins.find(admin => admin === connectedAddress);
+  const { allowAdmin } = useSiteAdmins();
 
   return (
     <div className="sticky lg:static top-0 navbar bg-base-100 min-h-0 flex-shrink-0 justify-between z-20 shadow-md shadow-secondary px-0 sm:px-2">
@@ -133,8 +117,8 @@ export const Header = () => {
       </div>
       <div className="navbar-end flex-grow mr-4">
         <RainbowKitCustomConnectButton />
-        {isLocalNetwork && <FaucetButton />}
-        {isLocalNetwork && <DepositTokenFaucetButton />}
+        {/* {isLocalNetwork && <FaucetButton />}
+        {isLocalNetwork && <DepositTokenFaucetButton />} */}
       </div>
     </div>
   );
