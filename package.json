@@ -34,7 +34,9 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
+    "@types/recharts": "^1.8.29",
     "@vercel/analytics": "^1.5.0",
-    "@vercel/speed-insights": "^1.2.0"
+    "@vercel/speed-insights": "^1.2.0",
+    "recharts": "^2.15.1"
   }
 }

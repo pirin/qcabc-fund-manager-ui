@@ -4,7 +4,8 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
+import PortfolioChart from "./PortfolioChart";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { useSiteAdmins } from "~~/hooks/scaffold-eth";
@@ -23,16 +24,16 @@ export const menuLinks: HeaderMenuLink[] = [
     type: 0,
   },
   {
-    label: "Fund Administration",
+    label: "Administration",
     href: "/admin",
     type: 1,
   },
-  {
-    label: "Debug Contracts",
-    href: "/debug",
-    icon: <BugAntIcon className="h-4 w-4" />,
-    type: 1,
-  },
+  // {
+  //   label: "Debug Contracts",
+  //   href: "/debug",
+  //   icon: <BugAntIcon className="h-4 w-4" />,
+  //   type: 1,
+  // },
 ];
 
 export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
@@ -80,7 +81,7 @@ export const Header = () => {
   const { allowAdmin } = useSiteAdmins();
 
   return (
-    <div className="sticky lg:static top-0 navbar bg-base-100 min-h-0 flex-shrink-0 justify-between z-20 shadow-sm shadow-secondary px-0 sm:px-2">
+    <div className="sticky lg:static top-0 navbar bg-base-100 py-0 min-h-0 flex-shrink-0 justify-between z-20 shadow-sm shadow-secondary px-0 sm:px-2">
       <div className="navbar-start w-auto lg:w-1/2">
         <div className="lg:hidden dropdown" ref={burgerMenuRef}>
           <label
@@ -115,7 +116,10 @@ export const Header = () => {
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">{HeaderMenuLinks(allowAdmin)}</ul>
       </div>
-      <div className="navbar-end flex-grow mr-4">
+      <div className="navbar-center flex-grow w-1/2">
+        <PortfolioChart />
+      </div>
+      <div className="navbar-end mr-4">
         <RainbowKitCustomConnectButton />
         {/* {isLocalNetwork && <FaucetButton />}
         {isLocalNetwork && <DepositTokenFaucetButton />} */}

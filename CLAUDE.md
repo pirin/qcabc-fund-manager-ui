@@ -3,7 +3,7 @@
 ## Commands
 - **Start development server**: `yarn start` or `yarn dev`
 - **Build**: `yarn next:build`
-- **Lint**: `yarn next:lint`
+- **Lint**: `yarn lint`
 - **Format**: `yarn next:format`
 - **Type checking**: `yarn next:check-types`
 - **Deploy to Vercel**: `yarn vercel` or `yarn vercel:yolo` (ignore build errors)

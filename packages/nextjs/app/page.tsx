@@ -296,7 +296,7 @@ const Home: NextPage = () => {
             </div>
 
             {/* Shareholder Transactions */}
-            <div className="mb-8 h-1/4 py-4 px-4 overflow-y-auto bg-base-100 rounded-xl w-1/2">
+            <div className="mb-8 w-1/2">
               <ShareholderTransactions refresh={refresh} shareholderAddress={connectedAddress} />
             </div>
 

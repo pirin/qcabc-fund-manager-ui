@@ -1,0 +1,10 @@
+query GetPortfolioUpdates {
+  portfolioUpdates(orderBy: timestamp) {
+    blockTimestamp
+    id
+    newPortfolioValue
+    newSharePrice
+    timestamp
+    transactionHash
+  }
+}

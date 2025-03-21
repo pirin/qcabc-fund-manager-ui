@@ -8,3 +8,4 @@ sources:
 documents:
   - ./graphql/GetShareholder.gql
   - ./graphql/GetShareholders.gql
+  - ./graphql/GetPortfolioUpdates.gql
