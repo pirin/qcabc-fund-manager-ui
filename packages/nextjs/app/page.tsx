@@ -102,7 +102,7 @@ const Home: NextPage = () => {
           /* Wallet is connected - show regular UI */
           <>
             {/* Deposit and Redeem Shares */}
-            <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 py-16">
+            <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 mt-12 mb-4">
               {/* Deposit Funds */}
               <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-full md:w-1/3 rounded-xl ">
                 <h3 className="text-2xl font-bold">Deposit Funds</h3>
@@ -210,7 +210,10 @@ const Home: NextPage = () => {
                   </>
                 ) : (
                   // User doesn't have deposit tokens - show message
-                  <NoDepositTokensMessage depositToken={depositToken || ""} />
+                  <NoDepositTokensMessage
+                    depositToken={depositToken || ""}
+                    onDepositTokensMinted={handleRefetchBalance}
+                  />
                 )}
               </div>
               {/* Redeem Shares */}
@@ -296,7 +299,7 @@ const Home: NextPage = () => {
             </div>
 
             {/* Shareholder Transactions */}
-            <div className="mb-8 w-1/2">
+            <div className="mb-8 w-1/2 flex-grow">
               <ShareholderTransactions refresh={refresh} shareholderAddress={connectedAddress} />
             </div>
 

@@ -8,6 +8,7 @@ import { useScaffoldWriteContract, useTargetNetwork } from "~~/hooks/scaffold-et
 
 interface NoTokensMessageProps {
   depositToken: string;
+  onDepositTokensMinted?: () => void;
 }
 
 /**
@@ -20,7 +21,7 @@ export const DepositTokenFaucetButton = () => {
 /**
  * Component displayed when the user has no deposit tokens available
  */
-const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken }) => {
+const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken, onDepositTokensMinted }) => {
   const { targetNetwork } = useTargetNetwork();
   const isLocalNetwork = targetNetwork.id === hardhat.id || targetNetwork.id === baseSepolia.id;
 
@@ -42,6 +43,7 @@ const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken }
       setLoading(true);
       await writeMockUSDC({ functionName: "mint", args: [address, 1000000000n] });
       setLoading(false);
+      onDepositTokensMinted && onDepositTokensMinted();
     } catch (error) {
       console.error("⚡️ ~ file: FaucetButton.tsx:sendETH ~ error", error);
       setLoading(false);

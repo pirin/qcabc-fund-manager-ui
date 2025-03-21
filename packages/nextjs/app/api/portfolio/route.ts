@@ -51,12 +51,13 @@ const publicClient = createPublicClient({
 
 export async function GET(req: NextRequest) {
   try {
-    console.info(`Starting Portfolio Update from ${req.ip}...`);
+    console.info(`Starting Portfolio Update from ${req.headers?.get("referer")}...`);
+    //console.info(req);
 
     // Generate random portfolio value (for simulation)
     const { formattedValue, portfolioValue } = getPortfolioValue();
 
-    console.info(`Portfolio Value is: ${portfolioValue}`);
+    console.info(`New Portfolio Value is: ${portfolioValue}`);
 
     console.info(`Publishing to ${chainName}...`);
 
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
       });
 
       console.info(`Transaction confirmed with ${logs.length} logs`);
-      console.info(logs);
+      //console.info(logs);
     }
 
     console.info(`Published!`);
@@ -98,7 +99,6 @@ export async function GET(req: NextRequest) {
       portfolioValue,
       timestamp,
       txHash,
-      logEntries: logs,
       onChainUpdateSuccess: !!txHash,
     });
   } catch (error) {
