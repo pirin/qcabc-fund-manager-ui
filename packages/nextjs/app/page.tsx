@@ -101,6 +101,15 @@ const Home: NextPage = () => {
         {connectedAddress ? (
           /* Wallet is connected - show regular UI */
           <>
+            {/* Info Message */}
+            {!redemtionsAllowed && sharesOwned ? (
+              <span className="text-accent text-center mt-8">
+                You will be able to redeem your <strong>{formatAsCurrency(sharesOwned)}</strong> shares during the next{" "}
+                <a href="/help#redemption-periods" target="_blank" className="underline">
+                  quarterly redemption period
+                </a>
+              </span>
+            ) : null}
             {/* Deposit and Redeem Shares */}
             <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 mt-12 mb-4">
               {/* Deposit Funds */}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPortfolioValue } from "./getPortfolioValue";
+import { getExternalPortfolioValue } from "./PortfolioValue";
 import { createPublicClient, createWalletClient, http, parseEventLogs } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
@@ -51,13 +51,13 @@ const publicClient = createPublicClient({
 
 export async function GET(req: NextRequest) {
   try {
-    console.info(`Starting Portfolio Update from ${req.headers?.get("referer")}...`);
+    console.info(`Starting Portfolio Update from: ${req.headers?.get("referer")}...`);
     //console.info(req);
 
-    // Generate random portfolio value (for simulation)
-    const { formattedValue, portfolioValue } = getPortfolioValue();
+    // Fetch portfolio value
+    const { formattedValue, portfolioValue } = await getExternalPortfolioValue();
 
-    console.info(`New Portfolio Value is: ${portfolioValue}`);
+    console.info(`New Portfolio Value is: ${portfolioValue} (${formattedValue})`);
 
     console.info(`Publishing to ${chainName}...`);
 
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       portfolioValue,
-      timestamp,
+      timestamp: new Date(parseInt(timestamp)).toISOString(),
       txHash,
       onChainUpdateSuccess: !!txHash,
     });
