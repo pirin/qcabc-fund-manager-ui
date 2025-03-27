@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getExternalPortfolioValue } from "./PortfolioValue";
+import { PortfolioOracle } from "./PortfolioOracle";
 import { createPublicClient, createWalletClient, http, parseEventLogs } from "viem";
+import { formatUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
 import deployedContracts from "~~/contracts/deployedContracts";
@@ -51,26 +52,31 @@ const publicClient = createPublicClient({
 
 export async function GET(req: NextRequest) {
   try {
-    console.info(`Starting Portfolio Update from: ${req.headers?.get("referer")}...`);
+    const referer = req.headers?.get("referer");
+    console.info(`Starting Portfolio Update ${referer ? "from: " + referer : ""}...`);
     //console.info(req);
 
-    // Fetch portfolio value
-    const { formattedValue, portfolioValue } = await getExternalPortfolioValue();
+    // Fetch portfolio value from the Oracle
+    const oracle = new PortfolioOracle();
+    const value: any = await oracle.getPortfolioValue();
 
-    console.info(`New Portfolio Value is: ${portfolioValue} (${formattedValue})`);
+    console.info(
+      `New Portfolio Value is: ${value.portfolioValue} (${value.formattedValue}). Source: ${value.source}, Last updated: ${value.lastUpdated?.toISOString()}`,
+    );
 
     console.info(`Publishing to ${chainName}...`);
 
     // Only try to update the contract if we have valid contract info
     let txHash = null;
     let logs = null;
+    let balance = null;
     if (fundManagerAddress && fundManagerAbi) {
       // Send transaction to update portfolio value on-chain
       txHash = await walletClient.writeContract({
         address: fundManagerAddress,
         abi: fundManagerAbi,
         functionName: "setPortfolioValue",
-        args: [formattedValue],
+        args: [value.formattedValue],
       });
 
       // Wait for transaction receipt and extract logs
@@ -88,6 +94,13 @@ export async function GET(req: NextRequest) {
       });
 
       console.info(`Transaction confirmed with ${logs.length} logs`);
+
+      // Retrieve the native balance of the wallet client
+      balance = await publicClient.getBalance({
+        address: account.address,
+      });
+
+      console.info(`Remaining oracle balance: ${balance}`);
       //console.info(logs);
     }
 
@@ -96,14 +109,15 @@ export async function GET(req: NextRequest) {
     const timestamp = Date.now().toString();
 
     return NextResponse.json({
-      portfolioValue,
-      timestamp: new Date(parseInt(timestamp)).toISOString(),
+      portfolioValue: value.portfolioValue,
+      lastUpdated: value.lastUpdated.toISOString(),
+      source: value.source,
+      txTimestamp: new Date(parseInt(timestamp)).toISOString(),
       txHash,
       onChainUpdateSuccess: !!txHash,
+      oracleBalance: balance ? formatUnits(balance, 18) : "N/A",
     });
   } catch (error) {
-    console.error("Error updating portfolio value:", error);
-
     return NextResponse.json(
       {
         error: (error as Error).message,
