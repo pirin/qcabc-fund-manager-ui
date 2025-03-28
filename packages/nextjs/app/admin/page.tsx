@@ -17,7 +17,7 @@ import {
   useScaffoldWriteContract,
   useSiteAdmins,
 } from "~~/hooks/scaffold-eth";
-import { getBlockExplorerTxLink, getParsedError, notification } from "~~/utils/scaffold-eth";
+import { notification } from "~~/utils/scaffold-eth";
 
 const Admin: NextPage = () => {
   const { data: shareTokenVersion } = useScaffoldReadContract({
