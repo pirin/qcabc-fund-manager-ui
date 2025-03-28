@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     //console.info(req);
 
     // Fetch portfolio value from the Oracle
-    const oracle = new PortfolioOracle();
+    const oracle = new PortfolioOracle(fundManagerAddress);
     const value: any = await oracle.getPortfolioValue();
 
     console.info(
