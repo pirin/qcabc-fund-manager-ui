@@ -111,9 +111,9 @@ const Home: NextPage = () => {
               </span>
             ) : null}
             {/* Deposit and Redeem Shares */}
-            <div className="flex justify-center items-center w-full flex-row flex-grow gap-12 mt-12 mb-4">
+            <div className="flex flex-col md:flex-row justify-center items-center  flex-grow gap-12 mt-12 mb-4">
               {/* Deposit Funds */}
-              <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-full md:w-1/3 rounded-xl ">
+              <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-96 rounded-xl ">
                 <h3 className="text-2xl font-bold">Deposit Funds</h3>
 
                 {depositBalance && parseFloat(formatUnits(depositBalance, 6)) > 0 ? (
@@ -227,7 +227,7 @@ const Home: NextPage = () => {
               </div>
               {/* Redeem Shares */}
               {redemtionsAllowed && sharesOwned && parseFloat(formatUnits(sharesOwned, 6)) > 0 && (
-                <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-full md:w-1/3 rounded-xl">
+                <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-96 rounded-xl">
                   <h3 className="text-2xl font-bold">Redeem Shares</h3>
 
                   <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">

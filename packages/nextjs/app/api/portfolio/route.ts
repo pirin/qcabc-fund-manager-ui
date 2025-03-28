@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
       txTimestamp: new Date(parseInt(timestamp)).toISOString(),
       txHash,
       onChainUpdateSuccess: !!txHash,
-      oracleBalance: balance ? formatUnits(balance, 18) : "N/A",
+      oracleBalance: balance ? parseFloat(formatUnits(balance, 18)).toFixed(4) : "N/A",
     });
   } catch (error) {
     return NextResponse.json(

@@ -50,12 +50,14 @@ const PortfolioChart = ({ refresh }: PortfolioChartProps) => {
 
         if (result?.portfolioUpdates) {
           // Process the data for the chart
-          const processedData = result.portfolioUpdates.map((update: PortfolioUpdate) => ({
-            timestamp: Number(update.timestamp) * 1000, // Convert to milliseconds
-            date: format(Number(update.timestamp) * 1000, "MMM dd, yyyy"),
-            portfolioValue: normalizeValue(update.newPortfolioValue),
-            sharePrice: normalizeValue(update.newSharePrice),
-          }));
+          const processedData = result.portfolioUpdates
+            .map((update: PortfolioUpdate) => ({
+              timestamp: Number(update.timestamp) * 1000, // Convert to milliseconds
+              date: format(Number(update.timestamp) * 1000, "MMM dd, yyyy"),
+              portfolioValue: normalizeValue(update.newPortfolioValue),
+              sharePrice: normalizeValue(update.newSharePrice),
+            }))
+            .filter((data: any) => data.timestamp > new Date().getTime() - 4 * 24 * 60 * 60 * 1000); // Filter data for the last 30 days
           setChartData(processedData);
         }
       } catch (err) {

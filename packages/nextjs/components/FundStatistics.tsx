@@ -108,7 +108,7 @@ const FundStatistics = ({ refresh }: FundStatisticsProps) => {
       </div>
       <div className="text-xs opacity-50 text-center pb-2">
         Portfolio updated{" "}
-        <span title={lastPortfolioUpdate ? new Date(Number(lastPortfolioUpdate) * 1000).toLocaleString() : "N/A"}>
+        <span title={lastPortfolioUpdate ? new Date(Number(lastPortfolioUpdate) * 1000).toUTCString() : "N/A"}>
           {formattedLastPortfolioUpdate}
         </span>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TransactionHashLink } from "./TransactionHashLink";
-import { formatAsCurrency } from "./scaffold-eth";
+import { formatAsCurrency, formatAsFloat } from "./scaffold-eth";
 import { useReadContract } from "wagmi";
 import { ArrowDownCircleIcon, ArrowUpCircleIcon } from "@heroicons/react/24/outline";
 import { GetShareholderDocument, execute } from "~~/.graphclient";
@@ -47,6 +47,7 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
             type: "deposit",
             from: formatAsCurrency(txn.depositAmount),
             to: formatAsCurrency(txn.shareTokensMinted, 6, "shares"),
+            sharePrice: (formatAsFloat(txn.depositAmount, 6) / formatAsFloat(txn.shareTokensMinted, 6)).toFixed(2),
             id: txn.transactionHash,
           })),
           ...(result?.shareholder?.redemptions || []).map((txn: any) => ({
@@ -54,6 +55,7 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
             type: "redemption",
             from: formatAsCurrency(txn.shareTokensRedeemed, 6, "shares"),
             to: formatAsCurrency(txn.depositAmount),
+            sharePrice: (formatAsFloat(txn.depositAmount, 6) / formatAsFloat(txn.shareTokensRedeemed, 6)).toFixed(2),
             id: txn.transactionHash,
           })),
         ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -103,8 +105,8 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
               <td className="w-full">
                 {txn.type === "deposit"
                   ? `Deposited ${txn.from} ${depositTokenSymbol} for 
-                    ${txn.to} shares`
-                  : `Redeemed ${txn.from} for ${txn.to} ${depositTokenSymbol}`}
+                    ${txn.to} at ${txn.sharePrice} ${depositTokenSymbol}/share`
+                  : `Redeemed ${txn.from} for ${txn.to} ${depositTokenSymbol} at ${txn.sharePrice} ${depositTokenSymbol}/share`}
               </td>
               <td>
                 <TransactionHashLink txHash={txn.id} />

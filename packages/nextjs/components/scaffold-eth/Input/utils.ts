@@ -120,3 +120,7 @@ export const formatAsCurrency = (amount: bigint | undefined, decimals = 6, curre
     }).format(value) + (currency ? ` ${currency}` : "")
   );
 };
+
+export const formatAsFloat = (amount: bigint | undefined, decimals = 6): number => {
+  return amount ? parseFloat(formatUnits(amount, decimals)) : 0;
+};

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useReadContract } from "wagmi";
+import { NotificationBubble } from "~~/components/NotificationBubble";
 import ShareholderTable from "~~/components/ShareholdersTable";
 import { AddressInput, InputBase, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
@@ -16,6 +17,7 @@ import {
   useScaffoldWriteContract,
   useSiteAdmins,
 } from "~~/hooks/scaffold-eth";
+import { getBlockExplorerTxLink, getParsedError, notification } from "~~/utils/scaffold-eth";
 
 const Admin: NextPage = () => {
   const { data: shareTokenVersion } = useScaffoldReadContract({
@@ -134,8 +136,11 @@ const Admin: NextPage = () => {
   }
 
   const refreshPortfolio = async () => {
+    let notificationId = null;
+
     try {
       console.log("Starting portfolio refresh...");
+      notificationId = notification.loading(<NotificationBubble message="Refreshig portfolio value..." details="" />);
       setPortfolioUpdating(true);
       const result = await fetch("/api/portfolio", {
         method: "GET",
@@ -143,22 +148,37 @@ const Admin: NextPage = () => {
       if (result.ok) {
         const data = await result.json();
         console.log("Portfolio updated successfully", data);
+
+        notification.remove(notificationId);
+        notification.success(
+          <NotificationBubble
+            message="Portfolio updated successfully!"
+            details={`Oracle: ${data.source}, balance: ${data.oracleBalance} ETH`}
+          />,
+          {
+            icon: "🎉",
+          },
+        );
         setNewPortfolioValue("");
         refetchFundValuations();
       } else {
-        console.error("Error updating portfolio", result);
+        const error = await result.text();
+        throw `Failed to refresh portfolio: ${error}`;
       }
       setPortfolioUpdating(false);
     } catch (error) {
+      if (notificationId) notification.remove(notificationId);
+
+      notification.error(<NotificationBubble message="Error updating portfolio" details="" />);
       console.error("Failed to refresh portfolio!", error);
       setPortfolioUpdating(false);
     }
   };
 
-  const settingsRow =
-    "flex justify-between bg-base-200 items-center px-4 rounded-s-md space-x-2 flex-col sm:flex-row gap-12";
-
-  const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4 gap-2";
+  const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4";
+  const sectionHeader = "text-xl text-accent";
+  const settingsRow = "flex justify-between items-center px-4 flex-col sm:flex-row gap-12";
+  const settingsLabel = "flex-1 text-left text opacity-70";
   const settingsButton = "btn btn-secondary btn-sm";
   return (
     <>
@@ -166,15 +186,22 @@ const Admin: NextPage = () => {
         <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
           {/* Fund Valuation Section */}
           <div className={settingsSection}>
-            <p className="text-2xl font-bold">Fund Valuation</p>
+            <p className={sectionHeader}>Fund Valuation</p>
+
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Share Price</p>
+              <p className={settingsLabel}>Total Fund Value (Deposits Balance + Porfolio Value)</p>
+              <p className="flex-1 text-right">{formatAsCurrency(fundValue, 6, "USDC")}</p>
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Deposits Balance</p>
               <p className="flex-1 text-right">
-                {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
+                {formattedTreasuryBalance} {depositTokenSymbol}
               </p>
             </div>
+
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Portfolio Value</p>
+              <p className={settingsLabel}>Portfolio Value</p>
               <div className="flex flex-row gap-4 items-center justify-end">
                 <span className="w-36">
                   <InputBase
@@ -208,60 +235,20 @@ const Admin: NextPage = () => {
               </div>
             </div>
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Last portfolio value updated</p>
+              <p className={settingsLabel}>Last portfolio value updated</p>
               <p className="flex-1 text-right"> {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}</p>
               <button className={settingsButton} onClick={refreshPortfolio} disabled={portfolioUpdating}>
                 {!portfolioUpdating ? "Refresh" : <span className="loading loading-spinner loading-xs"></span>}
-              </button>
-            </div>
-
-            <div className={settingsRow}>
-              <p className="flex-1 text-left">Total Fund Value (Deposits Balance + Porfolio Value)</p>
-              <p className="flex-1 text-right">{formatAsCurrency(fundValue, 6, "USDC")}</p>
-            </div>
-            <div className={settingsRow}>
-              <p className="flex-1 text-left">Total Shares</p>
-              <p className="flex-1 text-right">{formatAsCurrency(totalShares)}</p>
-            </div>
-            <div className={settingsRow}>
-              <p className="flex-1 text-left">Redemptions</p>
-              <span className={redemptionsAllowed ? "text-green-500" : "text-red-500"}>
-                {redemptionsAllowed ? "ALLOWED" : "PAUSED"}
-              </span>
-              <button
-                className={settingsButton}
-                onClick={async () => {
-                  try {
-                    await writeFundManager({
-                      functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions",
-                    });
-                    try {
-                      refetchRedemptions(); // refresh the redemptionsAllowed state
-                    } catch (e) {
-                      console.error("Error while refreshing redemptions state", e);
-                    }
-                  } catch (e) {
-                    console.error("Error while pausing/resuming redemptions", e);
-                  }
-                }}
-              >
-                {redemptionsAllowed ? "Pause Redemptions" : "Resume  Redemptions"}
               </button>
             </div>
           </div>
 
           {/* Deposits Section */}
           <div className={settingsSection}>
-            <p className="text-2xl font-bold">Deposits</p>
+            <p className={sectionHeader}>Deposits and Redemptions</p>
 
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Deposits Balance</p>
-              <p className="flex-1 text-right">
-                {formattedTreasuryBalance} {depositTokenSymbol}
-              </p>
-            </div>
-            <div className={settingsRow}>
-              <p className="flex-1 text-left">Transfer deposits to the Fund Investment Wallet</p>
+              <p className={settingsLabel}>Transfer deposits to the Fund Investment Wallet</p>
               <div className="flex flex-row gap-4 items-center justify-end">
                 <span className="w-36">
                   <InputBase
@@ -305,13 +292,61 @@ const Admin: NextPage = () => {
                 </button>
               </div>
             </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Redemptions</p>
+              <span className={redemptionsAllowed ? "text-green-500" : "text-red-500"}>
+                {redemptionsAllowed ? "ALLOWED" : "PAUSED"}
+              </span>
+              <button
+                className={settingsButton}
+                onClick={async () => {
+                  try {
+                    await writeFundManager({
+                      functionName: redemptionsAllowed ? "pauseRedemptions" : "resumeRedemptions",
+                    });
+                    try {
+                      refetchRedemptions(); // refresh the redemptionsAllowed state
+                    } catch (e) {
+                      console.error("Error while refreshing redemptions state", e);
+                    }
+                  } catch (e) {
+                    console.error("Error while pausing/resuming redemptions", e);
+                  }
+                }}
+              >
+                {redemptionsAllowed ? "Pause Redemptions" : "Resume  Redemptions"}
+              </button>
+            </div>
           </div>
 
-          {/* Portfolio Fund Value Section */}
+          {/* Fund Shares Section */}
           <div className={settingsSection}>
-            <p className="text-2xl font-bold">Portfolio Fund Value Updater Whitelisting</p>
+            <p className={sectionHeader}>Fund Shares</p>
+
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Address to Whitelist</p>
+              <p className={settingsLabel}>Total Shares</p>
+              <p className="flex-1 text-right">{formatAsCurrency(totalShares)}</p>
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Share Price</p>
+              <p className="flex-1 text-right">
+                {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
+              </p>
+            </div>
+          </div>
+
+          {/* Shareholders Section */}
+          <div className={settingsSection}>
+            <ShareholderTable />
+          </div>
+
+          {/* Portfolio Fund Value Updater Section */}
+          <div className={settingsSection}>
+            <p className={sectionHeader}>Portfolio Fund Value Updater Whitelisting</p>
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Address to Whitelist</p>
               <span className="flex flex-row gap-4 items-center">
                 <span className="w-96">
                   <AddressInput
@@ -341,33 +376,27 @@ const Admin: NextPage = () => {
             </div>
           </div>
 
-          {/* Shareholders Section */}
-          <div className={settingsSection}>
-            <p className="text-2xl font-bold">Shareholders</p>
-            <ShareholderTable />
-          </div>
-
           {/* Contract Info Section */}
           <div className={settingsSection}>
-            <p className="text-2xl font-bold">Contract Info</p>
+            <p className={sectionHeader}>Contract Info</p>
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Fund Manager Contract</p>
+              <p className={settingsLabel}>Fund Manager Contract</p>
               <p className="flex-1 text-right">v{fundManagerVersion}</p>
               <Address address={fundManagerAddress} />
             </div>
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Owner</p>
+              <p className={settingsLabel}>Owner</p>
               <Address address={owner} />
             </div>
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Share Token</p>
+              <p className={settingsLabel}>Share Token</p>
               <p className="flex-1 text-right">
                 {shareTokenName} ({shareTokenSymbol}) v{shareTokenVersion}
               </p>
               <Address address={shareToken} />
             </div>
             <div className={settingsRow}>
-              <p className="flex-1 text-left">Deposit Token</p>
+              <p className={settingsLabel}>Deposit Token</p>
               <p className="flex-1 text-right">
                 {depositTokenName} ({depositTokenSymbol})
               </p>
