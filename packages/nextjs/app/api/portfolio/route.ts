@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PortfolioOracle } from "./PortfolioOracle";
+import { formatDistanceToNow } from "date-fns";
 import { createPublicClient, createWalletClient, http, parseEventLogs } from "viem";
 import { formatUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -63,6 +64,13 @@ export async function GET(req: NextRequest) {
     console.info(
       `New Portfolio Value is: ${value.portfolioValue} (${value.formattedValue}). Source: ${value.source}, Last updated: ${value.lastUpdated?.toISOString()}`,
     );
+
+    //throw an exception if the portfolio is stale
+    if (value.lastUpdated && Date.now() - value.lastUpdated.getTime() > 1000 * 60 * 60 * 24) {
+      throw new Error(
+        `Oracle provided portfolio value is stale! Last updated: ${value.lastUpdated.toISOString()} (${formatDistanceToNow(value.lastUpdated)} ago)`,
+      );
+    }
 
     console.info(`Publishing to ${chainName}...`);
 

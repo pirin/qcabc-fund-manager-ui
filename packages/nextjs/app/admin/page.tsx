@@ -162,14 +162,17 @@ const Admin: NextPage = () => {
         setNewPortfolioValue("");
         refetchFundValuations();
       } else {
-        const error = await result.text();
-        throw `Failed to refresh portfolio: ${error}`;
+        if (result.status === 500) {
+          const data = await result.json();
+          throw data.error;
+        }
+        throw `Reason: ${result.statusText}`;
       }
       setPortfolioUpdating(false);
     } catch (error) {
       if (notificationId) notification.remove(notificationId);
 
-      notification.error(<NotificationBubble message="Error updating portfolio" details="" />);
+      notification.error(<NotificationBubble message="Refresh Failed!" details={`${error}`} />);
       console.error("Failed to refresh portfolio!", error);
       setPortfolioUpdating(false);
     }
