@@ -5,7 +5,18 @@ export interface PortfolioValue {
   source?: string;
 }
 
+interface PortfolioWallet {
+  valueSynced: number;
+  walletAddress: string;
+}
+
 export class PortfolioOracle {
+  private fundManagerAddress: string;
+
+  constructor(address: string) {
+    this.fundManagerAddress = address;
+  }
+
   async getPortfolioValue(): Promise<PortfolioValue | null> {
     try {
       // Get the primary endpoint
@@ -98,14 +109,35 @@ export class PortfolioOracle {
       }
 
       const data = await response.json();
-      const portfolioValue = Math.round(data.portfolioValue * 100) / 100; // Round to 2 decimal places
-      const formattedValue = BigInt(parseInt((portfolioValue * 1000000).toString(), 10));
-      const lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : null;
-
-      return { formattedValue, portfolioValue, lastUpdated } as PortfolioValue;
+      return this.calculatePortfolioValue(data);
     } catch (error) {
       console.error("Error fetching portfolio value:", error);
       return null;
     }
+  }
+
+  private calculatePortfolioValue(data: {
+    portfolioValue: number;
+    lastUpdated: string | number | Date;
+    portfolio: [] | null;
+  }): PortfolioValue {
+    let portfolioValue = Math.round(data.portfolioValue * 100) / 100; // Round to 2 decimal places
+    let formattedValue = BigInt(parseInt((portfolioValue * 1000000).toString(), 10));
+    const lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : null;
+
+    //If we have full portfolio data, calculate the portfolio value as a sum of all wallets (excluding the fund manager wallet)
+    if (!data.portfolio || data.portfolio.length === 0)
+      return { formattedValue, portfolioValue, lastUpdated } as PortfolioValue;
+
+    // Calculate sum of all valueSynced (excluding the balances in the fund manager wallet if it is present)
+    portfolioValue = data.portfolio.reduce(
+      (sum: number, wallet: PortfolioWallet) =>
+        wallet.walletAddress?.toLowerCase() !== this.fundManagerAddress.toLowerCase() ? sum + wallet.valueSynced : sum,
+      0,
+    );
+
+    formattedValue = BigInt(parseInt((portfolioValue * 1000000).toString(), 10));
+
+    return { formattedValue, portfolioValue, lastUpdated } as PortfolioValue;
   }
 }
