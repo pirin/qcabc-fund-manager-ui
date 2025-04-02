@@ -153,7 +153,7 @@ const Admin: NextPage = () => {
         notification.success(
           <NotificationBubble
             message="Portfolio updated successfully!"
-            details={`Oracle: ${data.source}, Value Deviation: ${data.portfolioValueDeviation}, Balance: ${data.oracleBalance} ETH`}
+            details={`Oracle: ${data.source}, Value Deviation: ${data.oraclePortfolioValueDeviation}, Balance: ${data.oracleBalance} ETH`}
           />,
         );
         setNewPortfolioValue("");
