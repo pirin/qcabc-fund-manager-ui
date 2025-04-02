@@ -411,18 +411,16 @@ const Admin: NextPage = () => {
               <p className={settingsLabel}>Reject if update is older than</p>
               <p className="flex-1 text-right">
                 {process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS
-                  ? process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS
-                  : "Not Configured"}{" "}
-                hours
+                  ? process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS + " hours"
+                  : "Not Configured"}
               </p>
             </div>
             <div className={settingsRow}>
               <p className={settingsLabel}>Reject if Oracles diagree on price more than</p>
               <p className="flex-1 text-right">
                 {process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT
-                  ? process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT
-                  : " Not Configured"}
-                %
+                  ? process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT + "%"
+                  : "Not Configured"}
               </p>
             </div>
           </div>
