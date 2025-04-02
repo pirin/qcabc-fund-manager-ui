@@ -153,11 +153,8 @@ const Admin: NextPage = () => {
         notification.success(
           <NotificationBubble
             message="Portfolio updated successfully!"
-            details={`Oracle: ${data.source}, balance: ${data.oracleBalance} ETH`}
+            details={`Oracle: ${data.source}, Value Deviation: ${data.portfolioValueDeviation}, Balance: ${data.oracleBalance} ETH`}
           />,
-          {
-            icon: "🎉",
-          },
         );
         setNewPortfolioValue("");
         refetchFundValuations();
@@ -404,6 +401,29 @@ const Admin: NextPage = () => {
                 {depositTokenName} ({depositTokenSymbol})
               </p>
               <Address address={depositToken} />
+            </div>
+          </div>
+
+          {/* Oracle Settings Section */}
+          <div className={settingsSection}>
+            <p className={sectionHeader}>Oracle Thresholds</p>
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Reject if update is older than</p>
+              <p className="flex-1 text-right">
+                {process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS
+                  ? process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS
+                  : "Not Configured"}{" "}
+                hours
+              </p>
+            </div>
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Reject if Oracles diagree on price more than</p>
+              <p className="flex-1 text-right">
+                {process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT
+                  ? process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT
+                  : " Not Configured"}
+                %
+              </p>
             </div>
           </div>
         </div>

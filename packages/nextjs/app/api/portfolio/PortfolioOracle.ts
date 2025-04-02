@@ -3,6 +3,7 @@ export interface PortfolioValue {
   portfolioValue: number;
   lastUpdated: Date | null;
   source?: string;
+  priceDeviation?: number;
 }
 
 interface PortfolioWallet {
@@ -24,9 +25,9 @@ export class PortfolioOracle {
 
       const primaryEndpointUrl = process.env.PORTFOLIO_UPDATE_PRIMARY_ENDPOINT;
       if (!primaryEndpointUrl) {
-        console.info("Primary Portfolio Value endpoint is not configured!");
+        console.info("Primary Oracle endpoint is not configured!");
       } else {
-        console.info("Checking Primary endpoint...");
+        console.info("Checking Primary Oracle...");
         primaryValue = await this.getExternalPortfolioValueFrom(
           primaryEndpointUrl,
           process.env.PORTFOLIO_UPDATE_PRIMARY_DATA,
@@ -35,11 +36,11 @@ export class PortfolioOracle {
         if (primaryValue) {
           primaryValue.source = "primary";
           console.info(
-            `Primary endpoint result: ${primaryValue.portfolioValue} from: ${
+            `Primary Oracle Value: ${primaryValue.portfolioValue.toFixed(2)} from: ${
               primaryValue.lastUpdated ? primaryValue.lastUpdated.toISOString() : "N/A"
             }`,
           );
-        } else console.info("Primary endpoint failed!");
+        } else console.info("Unable to reach Primary Oracle!");
       }
 
       // Check the secondary endpoint as a backup
@@ -47,9 +48,9 @@ export class PortfolioOracle {
 
       const secondaryEndpointUrl = process.env.PORTFOLIO_UPDATE_SECONDARY_ENDPOINT;
       if (!secondaryEndpointUrl) {
-        console.info("Secondary Portfolio Value endpoint is not configured!");
+        console.info("Secondary Oracle endpoint is not configured!");
       } else {
-        console.info("Checking secondary endpoint...");
+        console.info("Checking secondary Oracle...");
         secondaryValue = await this.getExternalPortfolioValueFrom(
           secondaryEndpointUrl,
           process.env.PORTFOLIO_UPDATE_SECONDARY_DATA,
@@ -58,11 +59,11 @@ export class PortfolioOracle {
         if (secondaryValue) {
           secondaryValue.source = "secondary";
           console.info(
-            `Secondary endpoint result: ${secondaryValue.portfolioValue} from: ${
+            `Secondary Oracle Value: ${secondaryValue.portfolioValue.toFixed(2)} from: ${
               secondaryValue.lastUpdated ? secondaryValue.lastUpdated.toISOString() : "N/A"
             }`,
           );
-        } else console.info("Secondary endpoint failed!");
+        } else console.info("Unable to reach Secondary Oracle!");
       }
 
       return this.resolvePortfolioValue(primaryValue, secondaryValue);
@@ -81,9 +82,18 @@ export class PortfolioOracle {
 
     // We have data from both endpoints, pick the most recent one
     if (primary && secondary) {
+      //calculate the price deviation between the two portfolioValues in percentage points
+      const priceDeviation =
+        Math.abs((primary.portfolioValue - secondary.portfolioValue) / primary.portfolioValue) * 100;
+
       if (primary.lastUpdated && secondary.lastUpdated) {
-        if (primary.lastUpdated > secondary.lastUpdated) return primary;
-        else return secondary;
+        if (primary.lastUpdated > secondary.lastUpdated) {
+          primary.priceDeviation = priceDeviation;
+          return primary;
+        } else {
+          secondary.priceDeviation = priceDeviation;
+          return secondary;
+        }
       }
 
       if (primary.lastUpdated) return primary;

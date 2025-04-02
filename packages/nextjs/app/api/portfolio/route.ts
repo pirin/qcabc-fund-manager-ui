@@ -54,7 +54,7 @@ const publicClient = createPublicClient({
 export async function GET(req: NextRequest) {
   try {
     const referer = req.headers?.get("referer");
-    console.info(`Starting Portfolio Update ${referer ? "from: " + referer : ""}...`);
+    console.info(`Asking Oracles to provide current Portfolio Value ${referer ? "from: " + referer : ""}...`);
     //console.info(req);
 
     // Fetch portfolio value from the Oracle
@@ -62,17 +62,34 @@ export async function GET(req: NextRequest) {
     const value: any = await oracle.getPortfolioValue();
 
     console.info(
-      `New Portfolio Value is: ${value.portfolioValue} (${value.formattedValue}). Source: ${value.source}, Last updated: ${value.lastUpdated?.toISOString()}`,
+      `Oracles reported Portfolio Value as: ${value.portfolioValue} (${value.formattedValue}). Source: ${value.source}, Last updated: ${value.lastUpdated?.toISOString()} (${formatDistanceToNow(value.lastUpdated)} ago), Oracle Value Deviation: ${
+        value.priceDeviation ? value.priceDeviation.toFixed(2) + "%" : "N/A"
+      }`,
     );
 
     //throw an exception if the portfolio is stale
-    if (value.lastUpdated && Date.now() - value.lastUpdated.getTime() > 1000 * 60 * 60 * 24) {
-      throw new Error(
-        `Oracle provided portfolio value is stale! Last updated: ${value.lastUpdated.toISOString()} (${formatDistanceToNow(value.lastUpdated)} ago)`,
-      );
+    if (process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS) {
+      const hourThreshold = parseInt(process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS);
+      console.info(`Oracle stale threshold: ${hourThreshold} hours`);
+      if (value.lastUpdated && Date.now() - value.lastUpdated.getTime() > hourThreshold * 1000 * 60 * 60) {
+        const error = `Oracle provided portfolio value is STALE and was IGNORED! Rported Update: ${value.lastUpdated.toISOString()} (${formatDistanceToNow(value.lastUpdated)} ago (max threshold is ${hourThreshold} hours)`;
+        console.error(error);
+        throw new Error(error);
+      }
     }
 
-    console.info(`Publishing to ${chainName}...`);
+    //throw an exception if oracles report differences in portfolio value
+    if (value.priceDeviation && process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT) {
+      const deviationThreshold = parseInt(process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT);
+      console.info(`Oracle value deviation threshold: ${deviationThreshold}%`);
+      if (value.priceDeviation > deviationThreshold) {
+        const error = `Oracles disagree on the portfolio value by ${value.priceDeviation.toFixed(2)} % (max threshold is ${deviationThreshold}%)`;
+        console.error(error);
+        throw new Error(error);
+      }
+    }
+
+    console.info(`Oracle value is good! Publishing to ${chainName}...`);
 
     // Only try to update the contract if we have valid contract info
     let txHash = null;
@@ -119,6 +136,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       portfolioValue: value.portfolioValue,
       lastUpdated: value.lastUpdated.toISOString(),
+      oraclePortfolioValueDeviation: value.priceDeviation ? value.priceDeviation.toFixed(2) + "%" : "N/A",
       source: value.source,
       txTimestamp: new Date(parseInt(timestamp)).toISOString(),
       txHash,
