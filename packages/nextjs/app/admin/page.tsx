@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useReadContract } from "wagmi";
@@ -27,6 +27,20 @@ const Admin: NextPage = () => {
 
   const [updaterWhitelistAddress, setUpdaterWhitelistAddress] = useState<string>("");
   const [treasuryToAmount, setTreasuryToAmount] = useState<string>("");
+
+  const { data: managementFeeWallet, refetch: refetchManagementFeeWallet } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "managementFeeRecipient",
+  });
+
+  const [newMgmtFeeWallet, setNewMgmtFeeWallet] = useState<string>("");
+
+  const { data: managementFee, refetch: refetchManagementFee } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "managementFee",
+  });
+
+  const [newMgmtFee, setNewMgmtFee] = useState<string>("");
 
   const { data: portfolioValue, refetch: refetchPortfolioValue } = useScaffoldReadContract({
     contractName: "FundManager",
@@ -123,13 +137,22 @@ const Admin: NextPage = () => {
 
   const { allowAdmin } = useSiteAdmins();
 
-  function refetchFundValuations() {
+  async function refetchFundValuations() {
     try {
-      refetchPortfolioValue();
-      refetchLastPortfolioUpdate();
-      refetchFundValue();
-      refetchSharePrice();
-      refetchBalance();
+      await Promise.all([
+        refetchPortfolioValue(),
+        refetchLastPortfolioUpdate(),
+        refetchFundValue(),
+        refetchSharePrice(),
+        refetchBalance(),
+        refetchManagementFee(),
+        refetchManagementFeeWallet(),
+      ]);
+
+      setTreasuryToAmount("");
+      setNewMgmtFee("");
+      setNewPortfolioValue("");
+      setNewMgmtFeeWallet("");
     } catch (e) {
       console.error("Error while refreshing data after updating portfolio value", e);
     }
@@ -223,7 +246,6 @@ const Admin: NextPage = () => {
                         functionName: "setPortfolioValue",
                         args: [parseUnits(newPortfolioValue, 6)],
                       });
-                      setNewPortfolioValue("");
                       refetchFundValuations();
                     } catch (e) {
                       console.error("Error while updating portfolio value", e);
@@ -243,7 +265,7 @@ const Admin: NextPage = () => {
             </div>
           </div>
 
-          {/* Deposits Section */}
+          {/* Deposits and Redemptions Section */}
           <div className={settingsSection}>
             <p className={sectionHeader}>Deposits and Redemptions</p>
 
@@ -317,6 +339,72 @@ const Admin: NextPage = () => {
               >
                 {redemptionsAllowed ? "Pause Redemptions" : "Resume  Redemptions"}
               </button>
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Wallet to collect Management Fees from deposits</p>
+              <span className="flex flex-row gap-4 items-center">
+                <span className="w-96">
+                  <AddressInput
+                    value={newMgmtFeeWallet}
+                    onChange={setNewMgmtFeeWallet}
+                    placeholder={managementFeeWallet}
+                  />
+                </span>
+                <button
+                  className={settingsButton}
+                  disabled={!newMgmtFeeWallet}
+                  onClick={async () => {
+                    try {
+                      await writeFundManager({
+                        functionName: "setManagementFeeRecipient",
+                        args: [newMgmtFeeWallet],
+                      });
+                      refetchFundValuations();
+                    } catch (e) {
+                      console.error("Error while setting management fee wallet", e);
+                    }
+                  }}
+                >
+                  Set
+                </button>
+              </span>
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Management Fee (0 to 10%)</p>
+              <div className="flex flex-row gap-4 items-center justify-end">
+                <span className="w-36">
+                  <InputBase
+                    value={newMgmtFee}
+                    onChange={value => {
+                      if (!isValidInteger(IntegerVariant.UINT16, value) && parseFloat(value) > 10) return;
+                      setNewMgmtFee(value);
+                    }}
+                    placeholder={managementFee ? (Number(managementFee) / 100).toFixed(2) : "0.00"}
+                  />
+                </span>
+                %
+                <button
+                  className={settingsButton}
+                  disabled={!newMgmtFee}
+                  onClick={async () => {
+                    try {
+                      let mf = Number(parseUnits(newMgmtFee, 2));
+                      await writeFundManager({
+                        functionName: "setManagementFee",
+                        args: [mf],
+                      });
+                      setNewMgmtFee(Number(parseFloat(newMgmtFee)).toFixed(2));
+                      refetchFundValuations();
+                    } catch (e) {
+                      console.error("Error while setting Management Fee", e);
+                    }
+                  }}
+                >
+                  Set
+                </button>
+              </div>
             </div>
           </div>
 

@@ -342,7 +342,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1739817644.json",
+      deploymentFile: "run-1740686066.json",
       deploymentScript: "DeployFundManager.s.sol",
     },
     ShareToken: {
@@ -878,7 +878,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1739817644.json",
+      deploymentFile: "run-1740686066.json",
       deploymentScript: "DeployFundManager.s.sol",
     },
     FundManager: {
@@ -1023,6 +1023,32 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "managementFee",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "managementFeeRecipient",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "owner",
           inputs: [],
           outputs: [
@@ -1123,6 +1149,32 @@ const deployedContracts = {
           type: "function",
           name: "resumeRedemptions",
           inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setManagementFee",
+          inputs: [
+            {
+              name: "mgmtFee",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setManagementFeeRecipient",
+          inputs: [
+            {
+              name: "feeRecipient",
+              type: "address",
+              internalType: "address",
+            },
+          ],
           outputs: [],
           stateMutability: "nonpayable",
         },
@@ -1314,6 +1366,57 @@ const deployedContracts = {
         },
         {
           type: "event",
+          name: "ManagementFeeCollected",
+          inputs: [
+            {
+              name: "depositor",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "feeAmount",
+              type: "uint256",
+              indexed: true,
+              internalType: "uint256",
+            },
+            {
+              name: "depositAmount",
+              type: "uint256",
+              indexed: true,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "ManagementFeeRecipientUpdated",
+          inputs: [
+            {
+              name: "newRecipient",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "ManagementFeeUpdated",
+          inputs: [
+            {
+              name: "newFee",
+              type: "uint16",
+              indexed: true,
+              internalType: "uint16",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
           name: "OwnershipTransferred",
           inputs: [
             {
@@ -1426,7 +1529,17 @@ const deployedContracts = {
         },
         {
           type: "error",
+          name: "FundManager__InvalidFeeRecipient",
+          inputs: [],
+        },
+        {
+          type: "error",
           name: "FundManager__InvalidInvestmentAmount",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "FundManager__InvalidManagementFee",
           inputs: [],
         },
         {
@@ -1442,6 +1555,11 @@ const deployedContracts = {
         {
           type: "error",
           name: "FundManager__InvalidShareTokenContract",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "FundManager__PortfoliValueIsStale",
           inputs: [],
         },
         {
@@ -1478,6 +1596,11 @@ const deployedContracts = {
         },
         {
           type: "error",
+          name: "ReentrancyGuardReentrantCall",
+          inputs: [],
+        },
+        {
+          type: "error",
           name: "SafeERC20FailedOperation",
           inputs: [
             {
@@ -1489,7 +1612,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1739817644.json",
+      deploymentFile: "run-1740686066.json",
       deploymentScript: "DeployFundManager.s.sol",
     },
   },
@@ -2031,7 +2154,7 @@ const deployedContracts = {
       deploymentScript: "DeployFundManager.s.sol",
     },
     FundManager: {
-      address: "0x4595312f55b82b7aea83ff8dd45d86c655732839",
+      address: "0xf30294d24cf37d9fe6ec122e38538d28ecb524a9",
       abi: [
         {
           type: "constructor",
@@ -2172,6 +2295,32 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "managementFee",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "managementFeeRecipient",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "owner",
           inputs: [],
           outputs: [
@@ -2272,6 +2421,32 @@ const deployedContracts = {
           type: "function",
           name: "resumeRedemptions",
           inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setManagementFee",
+          inputs: [
+            {
+              name: "mgmtFee",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setManagementFeeRecipient",
+          inputs: [
+            {
+              name: "feeRecipient",
+              type: "address",
+              internalType: "address",
+            },
+          ],
           outputs: [],
           stateMutability: "nonpayable",
         },
@@ -2463,6 +2638,57 @@ const deployedContracts = {
         },
         {
           type: "event",
+          name: "ManagementFeeCollected",
+          inputs: [
+            {
+              name: "depositor",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "feeAmount",
+              type: "uint256",
+              indexed: true,
+              internalType: "uint256",
+            },
+            {
+              name: "depositAmount",
+              type: "uint256",
+              indexed: true,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "ManagementFeeRecipientUpdated",
+          inputs: [
+            {
+              name: "newRecipient",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "ManagementFeeUpdated",
+          inputs: [
+            {
+              name: "newFee",
+              type: "uint16",
+              indexed: true,
+              internalType: "uint16",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
           name: "OwnershipTransferred",
           inputs: [
             {
@@ -2575,7 +2801,17 @@ const deployedContracts = {
         },
         {
           type: "error",
+          name: "FundManager__InvalidFeeRecipient",
+          inputs: [],
+        },
+        {
+          type: "error",
           name: "FundManager__InvalidInvestmentAmount",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "FundManager__InvalidManagementFee",
           inputs: [],
         },
         {
@@ -2591,6 +2827,11 @@ const deployedContracts = {
         {
           type: "error",
           name: "FundManager__InvalidShareTokenContract",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "FundManager__PortfoliValueIsStale",
           inputs: [],
         },
         {
@@ -2627,6 +2868,11 @@ const deployedContracts = {
         },
         {
           type: "error",
+          name: "ReentrancyGuardReentrantCall",
+          inputs: [],
+        },
+        {
+          type: "error",
           name: "SafeERC20FailedOperation",
           inputs: [
             {
@@ -2638,7 +2884,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1739912442.json",
+      deploymentFile: "run-1754593522360.json",
       deploymentScript: "DeployFundManager.s.sol",
     },
     MockUSDC: {
