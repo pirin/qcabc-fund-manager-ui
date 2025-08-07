@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatDistanceToNow, set } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useReadContract } from "wagmi";
@@ -390,10 +390,9 @@ const Admin: NextPage = () => {
                   disabled={!newMgmtFee}
                   onClick={async () => {
                     try {
-                      let mf = Number(parseUnits(newMgmtFee, 2));
                       await writeFundManager({
                         functionName: "setManagementFee",
-                        args: [mf],
+                        args: [Number(parseUnits(newMgmtFee, 2))],
                       });
                       setNewMgmtFee(Number(parseFloat(newMgmtFee)).toFixed(2));
                       refetchFundValuations();
