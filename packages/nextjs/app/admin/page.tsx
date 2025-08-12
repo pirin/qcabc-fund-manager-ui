@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
-import { useReadContract } from "wagmi";
+import { usePublicClient, useReadContract } from "wagmi";
 import { NotificationBubble } from "~~/components/NotificationBubble";
 import ShareholderTable from "~~/components/ShareholdersTable";
 import { AddressInput, InputBase, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
@@ -31,23 +31,38 @@ const Admin: NextPage = () => {
     functionName: "VERSION",
   });
 
+  const [mintMembershipTo, setMintMembershipTo] = useState<string>("");
   const [updaterWhitelistAddress, setUpdaterWhitelistAddress] = useState<string>("");
   const [treasuryToAmount, setTreasuryToAmount] = useState<string>("");
 
-  const { data: managementFeeWallet, refetch: refetchManagementFeeWallet } = useScaffoldReadContract({
+  // Treasury Wallet
+  const { data: treasuryWallet, refetch: refetchTreasuryWallet } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "managementFeeRecipient",
   });
 
-  const [newMgmtFeeWallet, setNewMgmtFeeWallet] = useState<string>("");
+  const [newTreasuryWallet, setTreasuryWallet] = useState<string>("");
+  const [editingTreasuryWallet, setEditingTreasuryWallet] = useState(false);
 
-  const { data: managementFee, refetch: refetchManagementFee } = useScaffoldReadContract({
+  // Management Fee
+  const { data: managementFee } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "managementFee",
   });
 
   const [newMgmtFee, setNewMgmtFee] = useState<string>("");
 
+  // Membership Badge
+  const { data: membershipBadge } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "membershipBadge",
+  });
+
+  const [newMembershipBadge, setNewMembershipBadge] = useState<string>("");
+  const [editingMembershipBadge, setEditingMembershipBadge] = useState(false);
+  const [checkingMembershipBadge, setCheckingMembershipBadge] = useState<string>("");
+
+  // Portfolio Value
   const { data: portfolioValue } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "portfolioValue",
@@ -55,6 +70,7 @@ const Admin: NextPage = () => {
 
   const [newPortfolioValue, setNewPortfolioValue] = useState<string>("");
 
+  // Last Portfolio Update
   const { data: lastPortfolioUpdate } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "lastPortfolioValueUpdated",
@@ -127,6 +143,8 @@ const Admin: NextPage = () => {
 
   const { writeContractAsync: writeFundManager } = useScaffoldWriteContract({ contractName: "FundManager" });
 
+  const { writeContractAsync: writeMembershipBadge } = useScaffoldWriteContract({ contractName: "MembershipBadge" });
+
   const { data: depositTokenName } = useReadContract({
     address: depositToken || "",
     abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
@@ -139,11 +157,10 @@ const Admin: NextPage = () => {
     functionName: "symbol",
   });
 
-  const [editingTreasuryWallet, setEditingTreasuryWallet] = useState(false);
-
   const [portfolioUpdating, setPortfolioUpdating] = useState(false);
 
   const { allowAdmin } = useSiteAdmins();
+  const publicClient = usePublicClient();
 
   const refreshPortfolio = async () => {
     let notificationId = null;
@@ -329,7 +346,7 @@ const Admin: NextPage = () => {
             <div className={settingsRow}>
               <p className={settingsLabel}>Management Fee (0 to 10%)</p>
               <div className="flex flex-row gap-4 items-center justify-end">
-                {!isZeroAddress(managementFeeWallet || "") ? (
+                {!isZeroAddress(treasuryWallet || "") ? (
                   <>
                     <span className="w-36">
                       <InputBase
@@ -351,9 +368,6 @@ const Admin: NextPage = () => {
                             functionName: "setManagementFee",
                             args: [Number(parseUnits(newMgmtFee, 2))],
                           });
-                          await refetchManagementFee();
-                          setNewMgmtFee("");
-                          router.refresh();
                         } catch (e) {
                           console.error("Error while setting Management Fee", e);
                         }
@@ -389,39 +403,132 @@ const Admin: NextPage = () => {
           {/* Shareholders Section */}
           <div className={settingsSection}>
             <ShareholderTable />
-          </div>
 
-          {/* Portfolio Fund Value Updater Section */}
-          <div className={settingsSection}>
-            <p className={sectionHeader}>Portfolio Fund Value Updater Whitelisting</p>
+            {/* Minting, Activating and Deactivating of Membership Badges */}
             <div className={settingsRow}>
-              <p className={settingsLabel}>Address to Whitelist</p>
-              <span className="flex flex-row gap-4 items-center">
-                <span className="w-96">
-                  <AddressInput
-                    value={updaterWhitelistAddress}
-                    onChange={setUpdaterWhitelistAddress}
-                    placeholder="Address to Whitelist"
-                  />
+              <p className={settingsLabel}>Membership Badge</p>
+              {!isZeroAddress(membershipBadge || "") ? (
+                <span className="flex flex-row gap-4 items-center">
+                  <span className="w-96">
+                    <AddressInput value={mintMembershipTo} onChange={setMintMembershipTo} placeholder="Member Wallet" />
+                  </span>
+                  <p className="text-sm">{checkingMembershipBadge}</p>
+                  {checkingMembershipBadge === "" && (
+                    <button
+                      className={settingsButton}
+                      disabled={!mintMembershipTo}
+                      onClick={async () => {
+                        try {
+                          console.log("Checking membership for", mintMembershipTo);
+
+                          const hasValidBadge = await publicClient?.readContract({
+                            address: membershipBadge as `0x${string}`,
+                            abi: DeployedContracts[84532].MembershipBadge.abi,
+                            functionName: "isMembershipValid",
+                            args: [mintMembershipTo as `0x${string}`],
+                          });
+
+                          if (hasValidBadge) {
+                            setCheckingMembershipBadge("Active");
+                            return;
+                          }
+
+                          const hasToken = await publicClient?.readContract({
+                            address: membershipBadge as `0x${string}`,
+                            abi: DeployedContracts[84532].MembershipBadge.abi,
+                            functionName: "balanceOf",
+                            args: [mintMembershipTo as `0x${string}`],
+                          });
+                          setCheckingMembershipBadge(hasToken && hasToken > 0 ? "Inactive" : "None");
+                        } catch (e) {
+                          console.error("Error while checking membership badge", e);
+                        }
+                      }}
+                    >
+                      Check
+                    </button>
+                  )}
+
+                  {checkingMembershipBadge === "Active" && (
+                    <button
+                      className={settingsButton}
+                      disabled={!mintMembershipTo}
+                      onClick={async () => {
+                        try {
+                          console.log("Deactivate membership for", mintMembershipTo);
+                          await (writeMembershipBadge as any)({
+                            address: membershipBadge as `0x${string}`,
+                            functionName: "setTokenValidity",
+                            args: [mintMembershipTo as `0x${string}`, false],
+                          });
+                          setCheckingMembershipBadge("");
+                        } catch (e) {
+                          console.error("Error while deactivating membership badge", e);
+                        }
+                      }}
+                    >
+                      Deactivate
+                    </button>
+                  )}
+
+                  {checkingMembershipBadge === "Inactive" && (
+                    <button
+                      className={settingsButton}
+                      disabled={!mintMembershipTo}
+                      onClick={async () => {
+                        try {
+                          console.log("Activating membership for", mintMembershipTo);
+                          await (writeMembershipBadge as any)({
+                            address: membershipBadge as `0x${string}`,
+                            functionName: "setTokenValidity",
+                            args: [mintMembershipTo as `0x${string}`, true],
+                          });
+                          setCheckingMembershipBadge("");
+                        } catch (e) {
+                          console.error("Error while activating membership badge", e);
+                        }
+                      }}
+                    >
+                      Activate
+                    </button>
+                  )}
+
+                  {checkingMembershipBadge === "None" && (
+                    <button
+                      className={settingsButton}
+                      disabled={!mintMembershipTo}
+                      onClick={async () => {
+                        try {
+                          console.log("Mint membership badge for", mintMembershipTo);
+                          await (writeMembershipBadge as any)({
+                            address: membershipBadge as `0x${string}`,
+                            functionName: "mint",
+                            args: [mintMembershipTo as `0x${string}`, true],
+                          });
+                          setCheckingMembershipBadge("");
+                        } catch (e) {
+                          console.error("Error while minting membership badge", e);
+                        }
+                      }}
+                    >
+                      Mint Badge
+                    </button>
+                  )}
+                  {checkingMembershipBadge && (
+                    <button
+                      className={settingsButton}
+                      onClick={async () => {
+                        setCheckingMembershipBadge("");
+                        setMintMembershipTo("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </span>
-                <button
-                  className={settingsButton}
-                  disabled={!updaterWhitelistAddress}
-                  onClick={async () => {
-                    try {
-                      await writeFundManager({
-                        functionName: "addToPortfolioUpdatersWhitelist",
-                        args: [updaterWhitelistAddress],
-                      });
-                      setTreasuryToAmount("");
-                    } catch (e) {
-                      console.error("Error while sending treasury funds", e);
-                    }
-                  }}
-                >
-                  Whitelist
-                </button>
-              </span>
+              ) : (
+                <p className="text-sm">Please set the Membership Badge NFT below</p>
+              )}
             </div>
           </div>
 
@@ -443,22 +550,18 @@ const Admin: NextPage = () => {
               {editingTreasuryWallet ? (
                 <span className="flex flex-row gap-4 items-center">
                   <span className="w-96">
-                    <AddressInput
-                      value={newMgmtFeeWallet}
-                      onChange={setNewMgmtFeeWallet}
-                      placeholder={managementFeeWallet}
-                    />
+                    <AddressInput value={newTreasuryWallet} onChange={setTreasuryWallet} placeholder={treasuryWallet} />
                   </span>
                   <button
                     className={settingsButton}
-                    disabled={!newMgmtFeeWallet}
+                    disabled={!newTreasuryWallet}
                     onClick={async () => {
                       try {
                         await writeFundManager({
                           functionName: "setManagementFeeRecipient",
-                          args: [newMgmtFeeWallet],
+                          args: [newTreasuryWallet],
                         });
-                        await refetchManagementFeeWallet();
+                        await refetchTreasuryWallet();
                         setEditingTreasuryWallet(false);
                         router.refresh();
                       } catch (e) {
@@ -475,9 +578,52 @@ const Admin: NextPage = () => {
               ) : (
                 <span className="flex flex-row gap-4 items-center">
                   <button className={settingsButton} onClick={() => setEditingTreasuryWallet(true)}>
-                    {isZeroAddress(managementFeeWallet || "") ? "Set" : "Edit"}
+                    {isZeroAddress(treasuryWallet || "") ? "Set" : "Edit"}
                   </button>
-                  <Address address={managementFeeWallet} />
+                  <Address address={treasuryWallet} />
+                </span>
+              )}
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Membership Badge NFT</p>
+              {editingMembershipBadge ? (
+                <span className="flex flex-row gap-4 items-center">
+                  <span className="w-96">
+                    <AddressInput
+                      value={newMembershipBadge}
+                      onChange={setNewMembershipBadge}
+                      placeholder={membershipBadge}
+                    />
+                  </span>
+                  <button
+                    className={settingsButton}
+                    disabled={!newMembershipBadge}
+                    onClick={async () => {
+                      try {
+                        await writeFundManager({
+                          functionName: "setMembershipBadge",
+                          args: [newMembershipBadge],
+                        });
+                        setEditingMembershipBadge(false);
+                        router.refresh();
+                      } catch (e) {
+                        console.error("Error while setting membership badge", e);
+                      }
+                    }}
+                  >
+                    Set
+                  </button>
+                  <button className={settingsButton} onClick={() => setEditingMembershipBadge(false)}>
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <span className="flex flex-row gap-4 items-center">
+                  <button className={settingsButton} onClick={() => setEditingMembershipBadge(true)}>
+                    {isZeroAddress(membershipBadge || "") ? "Set" : "Edit"}
+                  </button>
+                  <Address address={membershipBadge} />
                 </span>
               )}
             </div>
@@ -500,22 +646,54 @@ const Admin: NextPage = () => {
 
           {/* Oracle Settings Section */}
           <div className={settingsSection}>
-            <p className={sectionHeader}>Oracle Thresholds</p>
+            <p className={sectionHeader}>Portfolio Value Oracles</p>
+
             <div className={settingsRow}>
-              <p className={settingsLabel}>Reject if update is older than</p>
+              <p className={settingsLabel}>Reject Oracle update if it is older than</p>
               <p className="flex-1 text-right">
                 {process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS
                   ? process.env.NEXT_PUBLIC_ORACLE_STALE_THRESHOLD_HOURS + " hours"
                   : "Not Configured"}
               </p>
             </div>
+
             <div className={settingsRow}>
-              <p className={settingsLabel}>Reject if Oracles diagree on price more than</p>
+              <p className={settingsLabel}>Reject if Oracles diagree on price by more than</p>
               <p className="flex-1 text-right">
                 {process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT
                   ? process.env.NEXT_PUBLIC_ORACLE_DEVIATION_THRESHOLD_PCT + "%"
                   : "Not Configured"}
               </p>
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Add Oracle</p>
+              <span className="flex flex-row gap-4 items-center">
+                <span className="w-96">
+                  <AddressInput
+                    value={updaterWhitelistAddress}
+                    onChange={setUpdaterWhitelistAddress}
+                    placeholder="Oracle Address to Whitelist"
+                  />
+                </span>
+                <button
+                  className={settingsButton}
+                  disabled={!updaterWhitelistAddress}
+                  onClick={async () => {
+                    try {
+                      await writeFundManager({
+                        functionName: "addToPortfolioUpdatersWhitelist",
+                        args: [updaterWhitelistAddress],
+                      });
+                      setTreasuryToAmount("");
+                    } catch (e) {
+                      console.error("Error while sending treasury funds", e);
+                    }
+                  }}
+                >
+                  Add
+                </button>
+              </span>
             </div>
           </div>
         </div>
