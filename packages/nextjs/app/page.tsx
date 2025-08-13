@@ -42,6 +42,25 @@ const Home: NextPage = () => {
     args: [connectedAddress],
   });
 
+  const { data: membershipBadgeContract } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "membershipBadge",
+  });
+
+  const { data: hasValidMembershipBadge } = useReadContract({
+    address: membershipBadgeContract || "",
+    abi: DeployedContracts[84532].MembershipBadge.abi,
+    functionName: "isMembershipValid",
+    args: [connectedAddress || ""],
+  });
+
+  const { data: hasMemebershipBadge } = useReadContract({
+    address: membershipBadgeContract || "",
+    abi: DeployedContracts[84532].MembershipBadge.abi,
+    functionName: "balanceOf",
+    args: [connectedAddress || ""],
+  });
+
   const { data: redemtionsAllowed } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "redemptionsAllowed",
@@ -110,6 +129,17 @@ const Home: NextPage = () => {
                 </a>
               </span>
             ) : null}
+
+            {/* Validate Membership Badge */}
+            {!hasValidMembershipBadge && (
+              <span className="text-accent text-center mt-8">
+                {hasMemebershipBadge && hasMemebershipBadge > 0n
+                  ? "You membership has been temporarily deactivated. Please contact the QCABC Fund team to resolve this issue."
+                  : "You need to be a member of the QCABC Fund to be able to deposit funds."}
+              </span>
+            )}
+
+            {/* Share Balance */}
             {/* Deposit and Redeem Shares */}
             <div className="flex flex-col md:flex-row justify-center items-center  flex-grow gap-12 mt-12 mb-4">
               {/* Deposit Funds */}
@@ -158,6 +188,7 @@ const Home: NextPage = () => {
                       <button
                         className="btn btn-primary text-lg px-12 mt-2"
                         disabled={
+                          !hasValidMembershipBadge ||
                           !depositAmount ||
                           parseFloat(depositAmount) < 1 ||
                           !!depositError ||
@@ -266,6 +297,7 @@ const Home: NextPage = () => {
                     <button
                       className="btn btn-primary text-lg px-12 mt-2"
                       disabled={
+                        !hasValidMembershipBadge ||
                         !sharesToRedeem ||
                         !!redeemError ||
                         !redemtionsAllowed ||
