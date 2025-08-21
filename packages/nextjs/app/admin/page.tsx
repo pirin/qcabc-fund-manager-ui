@@ -24,8 +24,6 @@ import { isZeroAddress } from "~~/utils/scaffold-eth/common";
 const Admin: NextPage = () => {
   const router = useRouter();
 
-  //console.log("======== Rebuilding the page =====");
-
   const { data: shareTokenVersion } = useScaffoldReadContract({
     contractName: "ShareToken",
     functionName: "VERSION",
@@ -45,7 +43,7 @@ const Admin: NextPage = () => {
   const [editingTreasuryWallet, setEditingTreasuryWallet] = useState(false);
 
   // Management Fee
-  const { data: managementFee } = useScaffoldReadContract({
+  const { data: managementFee, refetch: refetchManagementFee } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "managementFee",
   });
@@ -116,7 +114,7 @@ const Admin: NextPage = () => {
     functionName: "sharePrice",
   });
 
-  const { data: treasuryBalance } = useScaffoldReadContract({
+  const { data: treasuryBalance, refetch: refetchTreasuryBalance } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "treasuryBalance",
   });
@@ -200,7 +198,7 @@ const Admin: NextPage = () => {
     }
   };
 
-  //console.log(`= Loaded values => Fund: ${fundValue}, Portfolio: ${portfolioValue}, Mgmt Fee: ${managementFee}`);
+  //console.log(`= Loaded values => Contract Fee: ${managementFee}, UI Fee: ${Number(parseUnits(newMgmtFee, 2))}`);
 
   const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4";
   const sectionHeader = "text-xl text-accent";
@@ -272,6 +270,7 @@ const Admin: NextPage = () => {
           <div className={settingsSection}>
             <p className={sectionHeader}>Deposits and Redemptions</p>
 
+            {/* Transfer funds to the Investment Wallet */}
             <div className={settingsRow}>
               <p className={settingsLabel}>Transfer funds to the Investment Wallet</p>
               <div className="flex flex-row gap-4 items-center justify-end">
@@ -306,6 +305,7 @@ const Admin: NextPage = () => {
                         functionName: "investFunds",
                         args: [owner, parseUnits(treasuryToAmount, 6)],
                       });
+                      await refetchTreasuryBalance();
                       setTreasuryToAmount("");
                     } catch (e) {
                       console.error("Error while sending treasury funds", e);
@@ -317,6 +317,7 @@ const Admin: NextPage = () => {
               </div>
             </div>
 
+            {/* Pause resume Redemptions Section */}
             <div className={settingsRow}>
               <p className={settingsLabel}>Redemptions</p>
               <span className={redemptionsAllowed ? "text-green-500" : "text-red-500"}>
@@ -343,6 +344,7 @@ const Admin: NextPage = () => {
               </button>
             </div>
 
+            {/* Management Fee Section */}
             <div className={settingsRow}>
               <p className={settingsLabel}>Management Fee (0 to 10%)</p>
               <div className="flex flex-row gap-4 items-center justify-end">
@@ -368,6 +370,7 @@ const Admin: NextPage = () => {
                             functionName: "setManagementFee",
                             args: [Number(parseUnits(newMgmtFee, 2))],
                           });
+                          refetchManagementFee();
                         } catch (e) {
                           console.error("Error while setting Management Fee", e);
                         }
