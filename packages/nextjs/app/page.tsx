@@ -339,6 +339,7 @@ const Home: NextPage = () => {
                         </button>
                       )}
                     </div>
+
                     <div className="text-xs opacity-50 mt-8">
                       {depositError ? (
                         <span className="text-red-500">{depositError}</span>
