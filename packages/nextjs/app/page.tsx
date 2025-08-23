@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import type { NextPage } from "next";
-import { formatUnits, parseUnits } from "viem";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { type Abi, encodeFunctionData, formatUnits, parseUnits } from "viem";
+import { useAccount, useCapabilities, useReadContract, useSendCalls, useWriteContract } from "wagmi";
 import ConnectWalletMessage from "~~/components/ConnectWalletMessage";
+import { EIP5972TxNotification } from "~~/components/EIP5792TxNotification";
 import FundStatistics from "~~/components/FundStatistics";
 import NoDepositTokensMessage from "~~/components/NoDepositTokensMessage";
 import ShareholderTransactions from "~~/components/ShareholderTransactions";
@@ -12,6 +13,7 @@ import { IntegerInput, IntegerVariant, formatAsCurrency, isValidInteger } from "
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
+import { getParsedError, notification } from "~~/utils/scaffold-eth";
 
 enum ApprovalStatus {
   Idle = 0,
@@ -21,7 +23,10 @@ enum ApprovalStatus {
 }
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  const { address: connectedAddress, chainId } = useAccount();
+
+  // wagmi hook to batch write to multiple contracts (EIP-5792 specific)
+  const { sendCallsAsync, isPending: isBatchContractInteractionPending } = useSendCalls();
 
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [sharesToRedeem, setSharesToredeem] = useState<string>("");
@@ -66,8 +71,8 @@ const Home: NextPage = () => {
     functionName: "redemptionsAllowed",
   });
 
-  const { data: deployedContractData } = useDeployedContractInfo({ contractName: "FundManager" });
-  const fundManagerAddress = deployedContractData?.address;
+  const { data: fundManagerContract } = useDeployedContractInfo({ contractName: "FundManager" });
+  const fundManagerAddress = fundManagerContract?.address;
 
   const { data: allowance, refetch: refetchAllowence } = useScaffoldReadContract({
     contractName: "MockUSDC",
@@ -79,14 +84,21 @@ const Home: NextPage = () => {
     contractName: "FundManager",
   });
 
+  const isLoading = isFundManagerTxnPending || isBatchContractInteractionPending;
+
+  //  isSuccess is true if the wallet is EIP-5792 compliant
+  const { isSuccess: isEIP5792Wallet, data: walletCapabilites } = useCapabilities({ account: connectedAddress });
+
   const { data: depositToken } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "depositToken",
   });
 
+  const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
+
   const { data: depositTokenSymbol } = useReadContract({
     address: depositToken || "",
-    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    abi: MockUSDC?.abi as Abi, //reuse the MockUSDC contract
     functionName: "symbol",
   });
 
@@ -96,7 +108,7 @@ const Home: NextPage = () => {
   const writeContractApprovalAsyncWithParams = () =>
     writeContractAsync({
       address: depositToken || "",
-      abi: DeployedContracts[31337].MockUSDC.abi, //reuse the approve method from the MockUSDC contract
+      abi: MockUSDC?.abi as Abi, //reuse the approve method from the MockUSDC contract
       functionName: "approve",
       args: [fundManagerAddress || "", parseUnits(depositAmount, 6)],
     });
@@ -111,6 +123,72 @@ const Home: NextPage = () => {
       setRefresh(prev => !prev);
     } catch (error) {
       console.error("Error refetching data:", error);
+    }
+  };
+
+  const batchAproveAndDeposit = async () => {
+    try {
+      if (!fundManagerContract || !walletCapabilites || !chainId) return;
+
+      const isPaymasterSupported = walletCapabilites?.[chainId]?.paymasterService?.supported;
+      // (OPTIONAL) An ERC-7677 paymaster service URL if you want to sponsor gas fee
+      const paymasterURL = "";
+      const txnId = await sendCallsAsync({
+        calls: [
+          {
+            to: depositToken || "",
+            data: encodeFunctionData({
+              abi: DeployedContracts[31337].MockUSDC.abi,
+              functionName: "approve",
+              args: [fundManagerAddress || "", parseUnits(depositAmount, 6)],
+            }),
+          },
+          {
+            to: fundManagerContract.address,
+            data: encodeFunctionData({
+              abi: fundManagerContract.abi,
+              functionName: "depositFunds",
+              args: [parseUnits(depositAmount, 6)],
+            }),
+          },
+        ],
+        capabilities:
+          isPaymasterSupported && Boolean(paymasterURL)
+            ? {
+                paymasterService: {
+                  url: paymasterURL,
+                },
+              }
+            : undefined,
+      });
+
+      notification.success(
+        <EIP5972TxNotification
+          message="Transaction completed successfully and your balances will update shortly."
+          statusId={txnId.id}
+        />,
+        {
+          duration: 10_000,
+        },
+      );
+    } catch (error) {
+      const parsedError = getParsedError(error);
+      notification.error(parsedError);
+    }
+
+    //Refresh shares Owned
+    try {
+      await refetchSharesOwned();
+    } catch (error) {
+      console.error("Error refetching shares:", error);
+    }
+
+    //Refresh wallet balance
+    await handleRefetchBalance();
+    try {
+      await refetchAllowence();
+    } catch (e) {
+      console.error("Error refetching allowance:", e);
     }
   };
 
@@ -170,7 +248,7 @@ const Home: NextPage = () => {
                             placeholder="100"
                           />
                         </span>
-                        {depositTokenSymbol}
+                        {depositTokenSymbol as string}
                         <button
                           disabled={!depositBalance}
                           className="btn btn-secondary text-xs h-6 min-h-6"
@@ -185,66 +263,91 @@ const Home: NextPage = () => {
                       </div>
                     </div>
                     <div className="flex gap-2 mb-2">
-                      <button
-                        className="btn btn-primary text-lg px-12 mt-2"
-                        disabled={
-                          !hasValidMembershipBadge ||
-                          !depositAmount ||
-                          parseFloat(depositAmount) < 1 ||
-                          !!depositError ||
-                          isApprovalTxnPending ||
-                          approvalStatus == ApprovalStatus.Pending ||
-                          isFundManagerTxnPending ||
-                          !isValidInteger(IntegerVariant.UINT256, depositAmount)
-                        }
-                        onClick={async () => {
-                          if (mustApprove) {
-                            try {
-                              setApprovalStatus(ApprovalStatus.Pending);
-                              await writeTx(writeContractApprovalAsyncWithParams, { blockConfirmations: 1 });
-                              try {
-                                await refetchAllowence();
-                                setApprovalStatus(ApprovalStatus.Approved);
-                              } catch (error) {
-                                setApprovalStatus(ApprovalStatus.Idle);
-                                console.error("Error refetching data:", error);
-                              }
-                            } catch (e) {
-                              setApprovalStatus(ApprovalStatus.Rejected);
-                              console.error("Error approving funds deposit", e);
-                            }
-                          } else {
-                            try {
-                              setApprovalStatus(ApprovalStatus.Idle);
-                              await writeFundManager({
-                                functionName: "depositFunds",
-                                args: [parseUnits(depositAmount, 6)],
-                              });
-                              setDepositAmount("");
-                              try {
-                                await refetchSharesOwned();
-                              } catch (error) {
-                                console.error("Error refetching data:", error);
-                              }
-                              await handleRefetchBalance();
-                            } catch (e) {
-                              console.error("Error while depositing funds", e);
-                            }
+                      {!isEIP5792Wallet ? (
+                        <button
+                          className="btn btn-primary text-lg px-12 mt-2"
+                          disabled={
+                            !hasValidMembershipBadge ||
+                            !depositAmount ||
+                            parseFloat(depositAmount) < 1 ||
+                            !!depositError ||
+                            isApprovalTxnPending ||
+                            approvalStatus == ApprovalStatus.Pending ||
+                            isFundManagerTxnPending ||
+                            !isValidInteger(IntegerVariant.UINT256, depositAmount)
                           }
-                        }}
-                      >
-                        {mustApprove ? "Approve" : "Deposit"}
-                      </button>
+                          onClick={async () => {
+                            if (mustApprove) {
+                              try {
+                                setApprovalStatus(ApprovalStatus.Pending);
+                                await writeTx(writeContractApprovalAsyncWithParams, { blockConfirmations: 1 });
+                                try {
+                                  await refetchAllowence();
+                                  setApprovalStatus(ApprovalStatus.Approved);
+                                } catch (error) {
+                                  setApprovalStatus(ApprovalStatus.Idle);
+                                  console.error("Error refetching data:", error);
+                                }
+                              } catch (e) {
+                                setApprovalStatus(ApprovalStatus.Rejected);
+                                console.error("Error approving funds deposit", e);
+                              }
+                            } else {
+                              try {
+                                setApprovalStatus(ApprovalStatus.Idle);
+                                await writeFundManager({
+                                  functionName: "depositFunds",
+                                  args: [parseUnits(depositAmount, 6)],
+                                });
+                                setDepositAmount("");
+                                try {
+                                  await refetchSharesOwned();
+                                } catch (error) {
+                                  console.error("Error refetching data:", error);
+                                }
+                                await handleRefetchBalance();
+                              } catch (e) {
+                                console.error("Error while depositing funds", e);
+                              }
+                            }
+                          }}
+                        >
+                          {mustApprove ? "Approve" : "Deposit"}
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-primary text-lg px-12 mt-2"
+                          disabled={
+                            !hasValidMembershipBadge ||
+                            !depositAmount ||
+                            parseFloat(depositAmount) < 1 ||
+                            !!depositError ||
+                            isLoading ||
+                            !isValidInteger(IntegerVariant.UINT256, depositAmount)
+                          }
+                          onClick={async () => {
+                            try {
+                              await batchAproveAndDeposit();
+                              setApprovalStatus(ApprovalStatus.Idle);
+                              setDepositAmount("");
+                            } catch (e) {
+                              console.error("Error in batch approve & deposit", e);
+                            }
+                          }}
+                        >
+                          Deposit Funds
+                        </button>
+                      )}
                     </div>
                     <div className="text-xs opacity-50 mt-8">
                       {depositError ? (
                         <span className="text-red-500">{depositError}</span>
                       ) : approvalStatus == ApprovalStatus.Approved ? (
                         "Approved! Press 'Deposit' to complete your deposit"
-                      ) : mustApprove ? (
+                      ) : !isEIP5792Wallet && mustApprove ? (
                         "Before depositing, you need to first 'Approve' your deposit"
                       ) : (
-                        <span>{`${formatAsCurrency(depositBalance, 6, depositTokenSymbol, 0)} is available for deposit`}</span>
+                        <span>{`${formatAsCurrency(depositBalance, 6, depositTokenSymbol as string, 0)} is available for deposit`}</span>
                       )}
                     </div>
                   </>

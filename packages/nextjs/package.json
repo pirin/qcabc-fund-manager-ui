@@ -1,7 +1,7 @@
 {
   "name": "@qcabc-fund-manager/nextjs",
   "private": true,
-  "version": "0.2.45",
+  "version": "0.2.46",
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
@@ -37,8 +37,8 @@
     "react-dom": "~18.3.1",
     "react-hot-toast": "~2.4.0",
     "usehooks-ts": "~3.1.0",
-    "viem": "2.21.32",
-    "wagmi": "2.12.23",
+    "viem": "2.31.1",
+    "wagmi": "2.15.6",
     "zustand": "~5.0.0"
   },
   "devDependencies": {

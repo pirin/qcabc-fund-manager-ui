@@ -506,7 +506,7 @@ const Admin: NextPage = () => {
                           await (writeMembershipBadge as any)({
                             address: membershipBadge as `0x${string}`,
                             functionName: "mint",
-                            args: [mintMembershipTo as `0x${string}`, true],
+                            args: [mintMembershipTo as `0x${string}`],
                           });
                           setCheckingMembershipBadge("");
                         } catch (e) {
