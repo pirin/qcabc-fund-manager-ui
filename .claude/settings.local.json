@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(yarn lint)"
+      "Bash(yarn lint)",
+      "Read(//Users/stefankyntchev/work/blockchain/UI/eip-5792/my-eip-5792/**)",
+      "Bash(yarn install)",
+      "Bash(yarn next:build:*)"
     ],
     "deny": []
   }

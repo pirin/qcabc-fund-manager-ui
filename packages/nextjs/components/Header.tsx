@@ -36,7 +36,7 @@ export const menuLinks: HeaderMenuLink[] = [
   // },
 ];
 
-export const HeaderMenuLinks = (allowAdmin: boolean): JSX.Element => {
+export const HeaderMenuLinks = (allowAdmin: boolean): React.ReactElement => {
   const pathname = usePathname();
 
   return (
