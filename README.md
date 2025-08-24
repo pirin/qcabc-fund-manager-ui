@@ -34,6 +34,7 @@ To get started with Scaffold-ETH 2, follow the steps below:
 cd my-dapp-example
 yarn install
 ```
+
 2. Start your NextJS app:
 
 ```
@@ -44,11 +45,18 @@ Visit your app on: `http://localhost:3000`. You can interact with your smart con
 
 ## Configuring Graph Client
 
+This application uses the following Graph: https://thegraph.com/studio/subgraph/qcabc-fund-manager-graph/
+(Connect Meteaverse Mask wallet)
+
+### Updating contract addresses
+
+Use https://github.com/pirin/qcabc-fund-manager-graph to update the published graph
+
 [Graphclient](https://github.com/graphprotocol/graph-client?tab=readme-ov-file#features-and-goals) is installed using `yarn add -D @graphprotocol/client-cli` createadds an interace to query graphs.
+
 Define the graph to be queried in `.graphclientrc.yml`
+use `/graphql/` folder to store queries that will be exposed in the generated Schema
 
 use `$npx graphclient build` to generate client side Typescript Libraries (written to `.graphclient` folder)
 
-use `/graphql/` folder to store queries that will be exposed in the generated Schema
-
-use `$npx graphclient serve-dev` to run a local client node that can be used to test the graph endpoint 
+use `$npx graphclient serve-dev` to run a local client node that can be used to test the graph endpoint

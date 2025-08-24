@@ -1,6 +1,5 @@
 schema {
   query: Query
-  subscription: Subscription
 }
 
 """
@@ -8,9 +7,7 @@ Marks the GraphQL type as indexable entity.  Each type that should be an entity 
 """
 directive @entity on OBJECT
 
-"""
-Defined a Subgraph ID for an object type
-"""
+"""Defined a Subgraph ID for an object type"""
 directive @subgraphId(id: String!) on OBJECT
 
 """
@@ -98,9 +95,7 @@ input Approval_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Approval_filter]
   or: [Approval_filter]
@@ -227,9 +222,7 @@ input Deposit_filter {
   shareholder_not_ends_with: String
   shareholder_not_ends_with_nocase: String
   shareholder_: Shareholder_filter
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Deposit_filter]
   or: [Deposit_filter]
@@ -252,6 +245,7 @@ enum Deposit_orderBy {
 
 """
 8 bytes signed integer
+
 """
 scalar Int8
 
@@ -319,9 +313,7 @@ input Investment_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Investment_filter]
   or: [Investment_filter]
@@ -336,9 +328,7 @@ enum Investment_orderBy {
   transactionHash
 }
 
-"""
-Defines the order direction, either ascending or descending
-"""
+"""Defines the order direction, either ascending or descending"""
 enum OrderDirection {
   asc
   desc
@@ -410,9 +400,7 @@ input OwnershipTransfer_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [OwnershipTransfer_filter]
   or: [OwnershipTransfer_filter]
@@ -482,9 +470,7 @@ input Pause_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Pause_filter]
   or: [Pause_filter]
@@ -569,9 +555,7 @@ input PortfolioUpdate_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [PortfolioUpdate_filter]
   or: [PortfolioUpdate_filter]
@@ -978,9 +962,7 @@ type Query {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Unpause!]!
-  """
-  Access to subgraph metadata
-  """
+  """Access to subgraph metadata"""
   _meta(block: Block_height): _Meta_
 }
 
@@ -1079,9 +1061,7 @@ input Redemption_filter {
   shareholder_not_ends_with: String
   shareholder_not_ends_with_nocase: String
   shareholder_: Shareholder_filter
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Redemption_filter]
   or: [Redemption_filter]
@@ -1146,9 +1126,7 @@ input RedemptionsPause_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [RedemptionsPause_filter]
   or: [RedemptionsPause_filter]
@@ -1205,9 +1183,7 @@ input RedemptionsResume_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [RedemptionsResume_filter]
   or: [RedemptionsResume_filter]
@@ -1286,9 +1262,7 @@ input ShareTokenOwnershipTransfer_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [ShareTokenOwnershipTransfer_filter]
   or: [ShareTokenOwnershipTransfer_filter]
@@ -1308,20 +1282,8 @@ type Shareholder {
   account: Bytes!
   shares: BigInt!
   lastUpdated: BigInt!
-  deposits(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Deposit_orderBy
-    orderDirection: OrderDirection
-    where: Deposit_filter
-  ): [Deposit!]!
-  redemptions(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Redemption_orderBy
-    orderDirection: OrderDirection
-    where: Redemption_filter
-  ): [Redemption!]!
+  deposits(skip: Int = 0, first: Int = 100, orderBy: Deposit_orderBy, orderDirection: OrderDirection, where: Deposit_filter): [Deposit!]!
+  redemptions(skip: Int = 0, first: Int = 100, orderBy: Redemption_orderBy, orderDirection: OrderDirection, where: Redemption_filter): [Redemption!]!
 }
 
 input Shareholder_filter {
@@ -1363,9 +1325,7 @@ input Shareholder_filter {
   lastUpdated_not_in: [BigInt!]
   deposits_: Deposit_filter
   redemptions_: Redemption_filter
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Shareholder_filter]
   or: [Shareholder_filter]
@@ -1380,405 +1340,9 @@ enum Shareholder_orderBy {
   redemptions
 }
 
-type Subscription {
-  deposit(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Deposit
-  deposits(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Deposit_orderBy
-    orderDirection: OrderDirection
-    where: Deposit_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Deposit!]!
-  redemption(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Redemption
-  redemptions(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Redemption_orderBy
-    orderDirection: OrderDirection
-    where: Redemption_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Redemption!]!
-  shareholder(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Shareholder
-  shareholders(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Shareholder_orderBy
-    orderDirection: OrderDirection
-    where: Shareholder_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Shareholder!]!
-  whitelistAddressRemoval(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): WhitelistAddressRemoval
-  whitelistAddressRemovals(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: WhitelistAddressRemoval_orderBy
-    orderDirection: OrderDirection
-    where: WhitelistAddressRemoval_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [WhitelistAddressRemoval!]!
-  whitelistAddressAddition(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): WhitelistAddressAddition
-  whitelistAddressAdditions(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: WhitelistAddressAddition_orderBy
-    orderDirection: OrderDirection
-    where: WhitelistAddressAddition_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [WhitelistAddressAddition!]!
-  investment(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Investment
-  investments(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Investment_orderBy
-    orderDirection: OrderDirection
-    where: Investment_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Investment!]!
-  ownershipTransfer(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): OwnershipTransfer
-  ownershipTransfers(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: OwnershipTransfer_orderBy
-    orderDirection: OrderDirection
-    where: OwnershipTransfer_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [OwnershipTransfer!]!
-  portfolioUpdate(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): PortfolioUpdate
-  portfolioUpdates(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: PortfolioUpdate_orderBy
-    orderDirection: OrderDirection
-    where: PortfolioUpdate_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [PortfolioUpdate!]!
-  redemptionsPause(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): RedemptionsPause
-  redemptionsPauses(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: RedemptionsPause_orderBy
-    orderDirection: OrderDirection
-    where: RedemptionsPause_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [RedemptionsPause!]!
-  redemptionsResume(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): RedemptionsResume
-  redemptionsResumes(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: RedemptionsResume_orderBy
-    orderDirection: OrderDirection
-    where: RedemptionsResume_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [RedemptionsResume!]!
-  approval(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Approval
-  approvals(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Approval_orderBy
-    orderDirection: OrderDirection
-    where: Approval_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Approval!]!
-  shareTokenOwnershipTransfer(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): ShareTokenOwnershipTransfer
-  shareTokenOwnershipTransfers(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: ShareTokenOwnershipTransfer_orderBy
-    orderDirection: OrderDirection
-    where: ShareTokenOwnershipTransfer_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [ShareTokenOwnershipTransfer!]!
-  pause(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Pause
-  pauses(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Pause_orderBy
-    orderDirection: OrderDirection
-    where: Pause_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Pause!]!
-  transfer(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Transfer
-  transfers(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Transfer_orderBy
-    orderDirection: OrderDirection
-    where: Transfer_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Transfer!]!
-  unpause(
-    id: ID!
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): Unpause
-  unpauses(
-    skip: Int = 0
-    first: Int = 100
-    orderBy: Unpause_orderBy
-    orderDirection: OrderDirection
-    where: Unpause_filter
-    """
-    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
-    """
-    block: Block_height
-    """
-    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
-    """
-    subgraphError: _SubgraphErrorPolicy_! = deny
-  ): [Unpause!]!
-  """
-  Access to subgraph metadata
-  """
-  _meta(block: Block_height): _Meta_
-}
-
 """
 A string representation of microseconds UNIX timestamp (16 digits)
+
 """
 scalar Timestamp
 
@@ -1857,9 +1421,7 @@ input Transfer_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Transfer_filter]
   or: [Transfer_filter]
@@ -1930,9 +1492,7 @@ input Unpause_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Unpause_filter]
   or: [Unpause_filter]
@@ -2001,9 +1561,7 @@ input WhitelistAddressAddition_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [WhitelistAddressAddition_filter]
   or: [WhitelistAddressAddition_filter]
@@ -2072,9 +1630,7 @@ input WhitelistAddressRemoval_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [WhitelistAddressRemoval_filter]
   or: [WhitelistAddressRemoval_filter]
@@ -2089,49 +1645,34 @@ enum WhitelistAddressRemoval_orderBy {
 }
 
 type _Block_ {
-  """
-  The hash of the block
-  """
+  """The hash of the block"""
   hash: Bytes
-  """
-  The block number
-  """
+  """The block number"""
   number: Int!
-  """
-  Integer representation of the timestamp stored in blocks for the chain
-  """
+  """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int
-  """
-  The hash of the parent block
-  """
+  """The hash of the parent block"""
   parentHash: Bytes
 }
 
-"""
-The type for the top-level _meta field
-"""
+"""The type for the top-level _meta field"""
 type _Meta_ {
   """
   Information about a specific subgraph block. The hash of the block
   will be null if the _meta field has a block constraint that asks for
   a block number. It will be filled if the _meta field has no block constraint
   and therefore asks for the latest  block
+  
   """
   block: _Block_!
-  """
-  The deployment ID
-  """
+  """The deployment ID"""
   deployment: String!
-  """
-  If `true`, the subgraph encountered indexing errors at some past block
-  """
+  """If `true`, the subgraph encountered indexing errors at some past block"""
   hasIndexingErrors: Boolean!
 }
 
 enum _SubgraphErrorPolicy_ {
-  """
-  Data will be returned even if the subgraph has indexing errors
-  """
+  """Data will be returned even if the subgraph has indexing errors"""
   allow
   """
   If the subgraph has indexing errors, data will be omitted. The default.
