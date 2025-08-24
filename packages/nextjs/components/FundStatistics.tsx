@@ -104,7 +104,7 @@ const FundStatistics = ({ refresh }: FundStatisticsProps) => {
           Fund Portfolio: <strong>{formatAsCurrency(portfolioValue, 6, String(depositTokenSymbol || ""), 0)}</strong>
         </span>
         <span className="text-sm">
-          Fund Treasury: <strong>{formatAsCurrency(treasuryBalance, 6, String(depositTokenSymbol || ""), 0)}</strong>{" "}
+          Fund Treasury: <strong>{formatAsCurrency(treasuryBalance, 6, String(depositTokenSymbol || ""), 0)}</strong>
         </span>
       </div>
       <div className="text-xs opacity-50 text-center pb-2">

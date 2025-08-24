@@ -44,7 +44,7 @@ const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken, 
       setLoading(true);
       await writeMockUSDC({ functionName: "mint", args: [address, 1000000000n] });
       setLoading(false);
-      onDepositTokensMinted && onDepositTokensMinted();
+      onDepositTokensMinted?.();
     } catch (error) {
       console.error("⚡️ ~ file: FaucetButton.tsx:sendETH ~ error", error);
       setLoading(false);
