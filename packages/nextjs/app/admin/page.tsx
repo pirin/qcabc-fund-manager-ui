@@ -143,15 +143,17 @@ const Admin: NextPage = () => {
 
   const { writeContractAsync: writeMembershipBadge } = useScaffoldWriteContract({ contractName: "MembershipBadge" });
 
+  const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
+
   const { data: depositTokenName } = useReadContract({
     address: depositToken || "",
-    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    abi: MockUSDC?.abi, //reuse the MockUSDC contract
     functionName: "name",
   });
 
   const { data: depositTokenSymbol } = useReadContract({
     address: depositToken || "",
-    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    abi: MockUSDC?.abi, //reuse the MockUSDC contract
     functionName: "symbol",
   });
 
@@ -221,7 +223,7 @@ const Admin: NextPage = () => {
             <div className={settingsRow}>
               <p className={settingsLabel}>Deposits Balance</p>
               <p className="flex-1 text-right">
-                {formattedTreasuryBalance} {depositTokenSymbol}
+                {formattedTreasuryBalance} {String(depositTokenSymbol || "")}
               </p>
             </div>
 
@@ -295,7 +297,7 @@ const Admin: NextPage = () => {
                 >
                   Max
                 </button>
-                {depositTokenSymbol}
+                {String(depositTokenSymbol || "")}
                 <button
                   className={settingsButton}
                   disabled={!treasuryToAmount}
@@ -641,7 +643,7 @@ const Admin: NextPage = () => {
             <div className={settingsRow}>
               <p className={settingsLabel}>Deposit Token</p>
               <p className="flex-1 text-right">
-                {depositTokenName} ({depositTokenSymbol})
+                {String(depositTokenName || "")} ({String(depositTokenSymbol || "")})
               </p>
               <Address address={depositToken} />
             </div>

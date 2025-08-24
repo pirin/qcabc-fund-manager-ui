@@ -138,7 +138,7 @@ const Home: NextPage = () => {
           {
             to: depositToken || "",
             data: encodeFunctionData({
-              abi: DeployedContracts[31337].MockUSDC.abi,
+              abi: MockUSDC?.abi as Abi,
               functionName: "approve",
               args: [fundManagerAddress || "", parseUnits(depositAmount, 6)],
             }),

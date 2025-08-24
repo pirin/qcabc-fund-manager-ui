@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { baseSepolia, hardhat } from "viem/chains";
 import { useAccount, useReadContract } from "wagmi";
-import DeployedContracts from "~~/contracts/deployedContracts";
-import { useScaffoldWriteContract, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldWriteContract, useTargetNetwork } from "~~/hooks/scaffold-eth";
 
 interface NoTokensMessageProps {
   depositToken: string;
@@ -31,9 +30,11 @@ const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken, 
 
   const { writeContractAsync: writeMockUSDC } = useScaffoldWriteContract({ contractName: "MockUSDC" });
 
+  const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
+
   const { data: depositTokenSymbol } = useReadContract({
     address: depositToken || "",
-    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    abi: MockUSDC?.abi,
     functionName: "symbol",
   });
 
@@ -73,9 +74,9 @@ const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken, 
           />
         </svg>
       </div>
-      <p className="text-lg mb-2 font-medium">No {depositTokenSymbol} Available</p>
+      <p className="text-lg mb-2 font-medium">{`No ${depositTokenSymbol}`} Available</p>
       <p className="text-sm text-gray-500 mb-6 max-w-xs">
-        You need to acquire some {depositTokenSymbol} tokens before you can invest in the fund.
+        {`You need to acquire some ${depositTokenSymbol} tokens before you can invest in the fund.`}
       </p>
       {!isLocalNetwork ? (
         <a
@@ -84,11 +85,11 @@ const NoDepositTokensMessage: React.FC<NoTokensMessageProps> = ({ depositToken, 
           rel="noopener noreferrer"
           className="btn btn-primary btn-sm"
         >
-          Get {depositTokenSymbol} Tokens
+          Get {String(depositTokenSymbol || "")} Tokens
         </a>
       ) : (
         <button className="btn btn-primary btn-sm" onClick={sendUSDC} disabled={loading}>
-          Get {depositTokenSymbol} Tokens
+          {`Get ${depositTokenSymbol} Tokens`}
         </button>
       )}
     </div>

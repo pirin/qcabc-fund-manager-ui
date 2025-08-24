@@ -6,8 +6,7 @@ import { formatAsCurrency, formatAsFloat } from "./scaffold-eth";
 import { useReadContract } from "wagmi";
 import { ArrowDownCircleIcon, ArrowUpCircleIcon } from "@heroicons/react/24/outline";
 import { GetShareholderDocument, execute } from "~~/.graphclient";
-import DeployedContracts from "~~/contracts/deployedContracts";
-import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 type TransactionRecord = {
   timestamp: string;
@@ -27,9 +26,11 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
     functionName: "depositToken",
   });
 
+  const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
+
   const { data: depositTokenSymbol } = useReadContract({
     address: depositToken || "",
-    abi: DeployedContracts[31337].MockUSDC.abi, //reuse the MockUSDC contract
+    abi: MockUSDC?.abi,
     functionName: "symbol",
   });
 
