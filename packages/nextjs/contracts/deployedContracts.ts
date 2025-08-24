@@ -342,8 +342,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1740686066.json",
-      deploymentScript: "DeployFundManager.s.sol",
+      deployedOnBlock: 1,
     },
     ShareToken: {
       address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
@@ -878,8 +877,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1740686066.json",
-      deploymentScript: "DeployFundManager.s.sol",
+      deployedOnBlock: 2,
     },
     FundManager: {
       address: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
@@ -1656,8 +1654,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1740686066.json",
-      deploymentScript: "DeployFundManager.s.sol",
+      deployedOnBlock: 3,
     },
   },
   84532: {
@@ -2194,8 +2191,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1739912442.json",
-      deploymentScript: "DeployFundManager.s.sol",
+      deployedOnBlock: 22072060,
     },
     FundManager: {
       address: "0xf5825641f46044b17105ec289b1e9bc10c044422",
@@ -2972,8 +2968,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1754854633306.json",
-      deploymentScript: "DeployFundManager.s.sol",
+      deployedOnBlock: 29543163,
     },
     MembershipBadge: {
       address: "0xa6ee8d3dbe03a58cfec8a6be94fb117fd1389b73",
@@ -3677,8 +3672,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1754841855850.json",
-      deploymentScript: "DeployMembershipBadge.s.sol",
+      deployedOnBlock: 29536774,
     },
     MockUSDC: {
       address: "0x7a07f915de2c36b4118f270ff8b18629a8f67377",
@@ -4016,8 +4010,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1739488390.json",
-      deploymentScript: "DeployMockUSDC.s.sol",
+      deployedOnBlock: 21860042,
     },
   },
 } as const;
