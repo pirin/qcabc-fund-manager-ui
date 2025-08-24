@@ -22,7 +22,7 @@ export const TransactionHashLink = ({ txHash }: TransactionHashLinkProps) => {
           href={blockExplorerLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline whitespace-nowrap text-secondary"
+          className="hover:underline whitespace-nowrap"
         >
           Txn Details
         </Link>
