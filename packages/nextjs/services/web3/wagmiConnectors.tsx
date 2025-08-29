@@ -37,7 +37,7 @@ export const wagmiConnectors = connectorsForWallets(
   ],
 
   {
-    appName: "scaffold-eth-2",
+    appName: "QCABC Fund Manager",
     projectId: scaffoldConfig.walletConnectProjectId,
   },
 );
