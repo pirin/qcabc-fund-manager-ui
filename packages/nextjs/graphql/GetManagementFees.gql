@@ -1,0 +1,10 @@
+query GetManagementFees {
+  managementFeeCollecteds(orderBy: blockTimestamp, orderDirection: desc) {
+    id
+    feeAmount
+    depositor
+    depositAmount
+    blockTimestamp
+    transactionHash
+  }
+}

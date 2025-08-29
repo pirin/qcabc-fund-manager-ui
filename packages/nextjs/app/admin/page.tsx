@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
-import { usePublicClient, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { NotificationBubble } from "~~/components/NotificationBubble";
-import ShareholderTable from "~~/components/ShareholdersTable";
 import { AddressInput, InputBase, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
-import DeployedContracts from "~~/contracts/deployedContracts";
 import {
   useDeployedContractInfo,
   useScaffoldReadContract,
@@ -29,7 +27,6 @@ const Admin: NextPage = () => {
     functionName: "VERSION",
   });
 
-  const [mintMembershipTo, setMintMembershipTo] = useState<string>("");
   const [updaterWhitelistAddress, setUpdaterWhitelistAddress] = useState<string>("");
   const [treasuryToAmount, setTreasuryToAmount] = useState<string>("");
 
@@ -58,7 +55,6 @@ const Admin: NextPage = () => {
 
   const [newMembershipBadge, setNewMembershipBadge] = useState<string>("");
   const [editingMembershipBadge, setEditingMembershipBadge] = useState(false);
-  const [checkingMembershipBadge, setCheckingMembershipBadge] = useState<string>("");
 
   // Portfolio Value
   const { data: portfolioValue } = useScaffoldReadContract({
@@ -141,8 +137,6 @@ const Admin: NextPage = () => {
 
   const { writeContractAsync: writeFundManager } = useScaffoldWriteContract({ contractName: "FundManager" });
 
-  const { writeContractAsync: writeMembershipBadge } = useScaffoldWriteContract({ contractName: "MembershipBadge" });
-
   const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
 
   const { data: depositTokenName } = useReadContract({
@@ -160,7 +154,6 @@ const Admin: NextPage = () => {
   const [portfolioUpdating, setPortfolioUpdating] = useState(false);
 
   const { allowAdmin } = useSiteAdmins();
-  const publicClient = usePublicClient();
 
   const refreshPortfolio = async () => {
     let notificationId = null;
@@ -348,7 +341,15 @@ const Admin: NextPage = () => {
 
             {/* Management Fee Section */}
             <div className={settingsRow}>
-              <p className={settingsLabel}>Management Fee (0 to 10%)</p>
+              <p className={settingsLabel}>
+                Management Fee (0 to 10%){" "}
+                <button
+                  className="btn btn-secondary text-xs h-6 min-h-6"
+                  onClick={() => router.push("/admin/management-fees")}
+                >
+                  View Fees
+                </button>
+              </p>
               <div className="flex flex-row gap-4 items-center justify-end">
                 {!isZeroAddress(treasuryWallet || "") ? (
                   <>
@@ -407,133 +408,12 @@ const Admin: NextPage = () => {
 
           {/* Shareholders Section */}
           <div className={settingsSection}>
-            <ShareholderTable />
-
-            {/* Minting, Activating and Deactivating of Membership Badges */}
+            <p className={sectionHeader}>Shareholders</p>
             <div className={settingsRow}>
-              <p className={settingsLabel}>Membership Badge</p>
-              {!isZeroAddress(membershipBadge || "") ? (
-                <span className="flex flex-row gap-4 items-center">
-                  <span className="w-96">
-                    <AddressInput value={mintMembershipTo} onChange={setMintMembershipTo} placeholder="Member Wallet" />
-                  </span>
-                  <p className="text-sm">{checkingMembershipBadge}</p>
-                  {checkingMembershipBadge === "" && (
-                    <button
-                      className={settingsButton}
-                      disabled={!mintMembershipTo}
-                      onClick={async () => {
-                        try {
-                          console.log("Checking membership for", mintMembershipTo);
-
-                          const hasValidBadge = await publicClient?.readContract({
-                            address: membershipBadge as `0x${string}`,
-                            abi: DeployedContracts[84532].MembershipBadge.abi,
-                            functionName: "isMembershipValid",
-                            args: [mintMembershipTo as `0x${string}`],
-                          });
-
-                          if (hasValidBadge) {
-                            setCheckingMembershipBadge("Active");
-                            return;
-                          }
-
-                          const hasToken = await publicClient?.readContract({
-                            address: membershipBadge as `0x${string}`,
-                            abi: DeployedContracts[84532].MembershipBadge.abi,
-                            functionName: "balanceOf",
-                            args: [mintMembershipTo as `0x${string}`],
-                          });
-                          setCheckingMembershipBadge(hasToken && hasToken > 0 ? "Inactive" : "None");
-                        } catch (e) {
-                          console.error("Error while checking membership badge", e);
-                        }
-                      }}
-                    >
-                      Check
-                    </button>
-                  )}
-
-                  {checkingMembershipBadge === "Active" && (
-                    <button
-                      className={settingsButton}
-                      disabled={!mintMembershipTo}
-                      onClick={async () => {
-                        try {
-                          console.log("Deactivate membership for", mintMembershipTo);
-                          await (writeMembershipBadge as any)({
-                            address: membershipBadge as `0x${string}`,
-                            functionName: "setTokenValidity",
-                            args: [mintMembershipTo as `0x${string}`, false],
-                          });
-                          setCheckingMembershipBadge("");
-                        } catch (e) {
-                          console.error("Error while deactivating membership badge", e);
-                        }
-                      }}
-                    >
-                      Deactivate
-                    </button>
-                  )}
-
-                  {checkingMembershipBadge === "Inactive" && (
-                    <button
-                      className={settingsButton}
-                      disabled={!mintMembershipTo}
-                      onClick={async () => {
-                        try {
-                          console.log("Activating membership for", mintMembershipTo);
-                          await (writeMembershipBadge as any)({
-                            address: membershipBadge as `0x${string}`,
-                            functionName: "setTokenValidity",
-                            args: [mintMembershipTo as `0x${string}`, true],
-                          });
-                          setCheckingMembershipBadge("");
-                        } catch (e) {
-                          console.error("Error while activating membership badge", e);
-                        }
-                      }}
-                    >
-                      Activate
-                    </button>
-                  )}
-
-                  {checkingMembershipBadge === "None" && (
-                    <button
-                      className={settingsButton}
-                      disabled={!mintMembershipTo}
-                      onClick={async () => {
-                        try {
-                          console.log("Mint membership badge for", mintMembershipTo);
-                          await (writeMembershipBadge as any)({
-                            address: membershipBadge as `0x${string}`,
-                            functionName: "mint",
-                            args: [mintMembershipTo as `0x${string}`],
-                          });
-                          setCheckingMembershipBadge("");
-                        } catch (e) {
-                          console.error("Error while minting membership badge", e);
-                        }
-                      }}
-                    >
-                      Mint Badge
-                    </button>
-                  )}
-                  {checkingMembershipBadge && (
-                    <button
-                      className={settingsButton}
-                      onClick={async () => {
-                        setCheckingMembershipBadge("");
-                        setMintMembershipTo("");
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </span>
-              ) : (
-                <p className="text-sm">Please set the Membership Badge NFT below</p>
-              )}
+              <p className={settingsLabel}>Manage fund shareholders and membership badges</p>
+              <button className={settingsButton} onClick={() => router.push("/admin/shareholders")}>
+                View Shareholders
+              </button>
             </div>
           </div>
 

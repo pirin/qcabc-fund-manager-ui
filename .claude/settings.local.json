@@ -2,11 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(yarn lint)",
-      "Read(//Users/stefankyntchev/work/blockchain/UI/eip-5792/my-eip-5792/**)",
       "Bash(yarn install)",
       "Bash(yarn next:build:*)",
-      "Read(//Users/stefankyntchev/work/blockchain/UI/eip-5792/my-eip-5792/**)",
-      "Read(//Users/stefankyntchev/work/blockchain/UI/eip-5792/my-eip-5792/**)"
+      "Bash(yarn gc-build:*)",
+      "Bash(yarn next:check-types:*)",
+      "Bash(yarn next:format:*)"
     ],
     "deny": []
   }
