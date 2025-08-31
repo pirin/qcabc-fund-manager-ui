@@ -25,6 +25,7 @@ type ChartDataPoint = {
 
 type PortfolioChartProps = {
   refresh?: boolean;
+  height?: number | string; // allow overriding height when embedding
 };
 
 // Function to normalize values by dividing by 1,000,000
@@ -32,7 +33,7 @@ const normalizeValue = (value: string): number => {
   return Number(value) / 1000000;
 };
 
-const PortfolioChart = ({ refresh }: PortfolioChartProps) => {
+const PortfolioChart = ({ refresh, height = 200 }: PortfolioChartProps) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -94,21 +95,32 @@ const PortfolioChart = ({ refresh }: PortfolioChartProps) => {
   };
 
   return (
-    <div className="h-14 w-full">
+    <div className="w-full" style={{ height }}>
       {/* @ts-ignore - Ignoring type issues with Recharts components */}
       <ResponsiveContainer width="100%" height="100%">
         {/* @ts-ignore */}
-        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+          {/* Visible X Axis */}
           {/* @ts-ignore */}
-          <XAxis dataKey="date" textAnchor="end" height={0} axisLine={true} tick={true} />
+          <XAxis
+            dataKey="date"
+            stroke="#888"
+            tickLine={false}
+            axisLine={true}
+            tickMargin={8}
+            minTickGap={20}
+            style={{ fontSize: "0.65rem" }}
+          />
+          {/* Visible Y Axis */}
           {/* @ts-ignore */}
           <YAxis
             yAxisId="left"
-            tickCount={3}
-            tick={true}
+            stroke="#888"
+            tickLine={false}
             axisLine={true}
-            width={0}
+            width={60}
             tickFormatter={value => formatAsCurrency(BigInt(Math.floor(Number(value) * 1000000)), 6, "USDC", 0)}
+            style={{ fontSize: "0.65rem" }}
           />
           {/* @ts-ignore */}
           <Tooltip

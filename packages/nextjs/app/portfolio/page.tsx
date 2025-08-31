@@ -1,13 +1,38 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
+import { GetShareholdersDocument, execute } from "~~/.graphclient";
+import FundStatistics from "~~/components/FundStatistics";
 import PortfolioChart from "~~/components/PortfolioChart";
+import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 const PortfolioPage: NextPage = () => {
   const { address } = useAccount();
+  const [loadingAgg, setLoadingAgg] = useState<boolean>(true);
+  const [errorAgg, setErrorAgg] = useState<any>(null);
+  const [totalDeposits, setTotalDeposits] = useState<bigint>(0n);
+
+  // Fund value (current portfolio value)
+  const { data: fundValue } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "totalFundValue",
+  });
+
+  // Deposit token + symbol for formatting
+  const { data: depositToken } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "depositToken",
+  });
+  const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
+  const { data: depositTokenSymbol } = useReadContract({
+    address: depositToken || "",
+    abi: MockUSDC?.abi,
+    functionName: "symbol",
+  });
 
   const { data: membershipBadgeContract } = useScaffoldReadContract({
     contractName: "FundManager",
@@ -22,6 +47,35 @@ const PortfolioPage: NextPage = () => {
     functionName: "isMembershipValid",
     args: [address || ""],
   });
+
+  // Aggregate deposits across all shareholders via subgraph
+  useEffect(() => {
+    const fetchAggregates = async () => {
+      if (!hasValidMembershipBadge) return; // only after membership confirmed
+      try {
+        setLoadingAgg(true);
+        const { data } = await execute(GetShareholdersDocument, {} as any);
+        if (data?.shareholders) {
+          let sum: bigint = 0n;
+          for (const sh of data.shareholders) {
+            for (const dep of sh.deposits || []) {
+              try {
+                sum += BigInt(dep.depositAmount);
+              } catch {
+                // ignore malformed
+              }
+            }
+          }
+          setTotalDeposits(sum);
+        }
+      } catch (e) {
+        setErrorAgg(e);
+      } finally {
+        setLoadingAgg(false);
+      }
+    };
+    fetchAggregates();
+  }, [hasValidMembershipBadge]);
 
   if (!address) {
     return (
@@ -42,11 +96,59 @@ const PortfolioPage: NextPage = () => {
     );
   }
 
+  // Compute return %
+  const symbol = String(depositTokenSymbol || "");
+  const haveDeposits = totalDeposits > 0n;
+  const portfolioValue = fundValue ? (fundValue as bigint) : 0n;
+  let returnPct: string = "0.00";
+  if (haveDeposits && portfolioValue > 0n) {
+    const diff = Number(portfolioValue - totalDeposits) / 1e6; // scale for percentage calc using decimals (assumes 6)
+    const base = Number(totalDeposits) / 1e6;
+    if (base > 0) {
+      returnPct = ((diff / base) * 100).toFixed(2);
+    }
+  }
+
   return (
     <div className="w-full max-w-5xl mx-auto mt-6 p-4">
       <h1 className="text-2xl font-semibold mb-4">Portfolio Performance</h1>
+      <div className="stats bg-base-200 shadow w-full mb-6 rounded-md">
+        <div className="stat">
+          <div className="stat-title">Total Deposits</div>
+          <div className="stat-value text-lg">
+            {loadingAgg ? (
+              <span className="loading loading-spinner loading-xs" />
+            ) : errorAgg ? (
+              "—"
+            ) : (
+              formatAsCurrency(totalDeposits, 6, symbol || "")
+            )}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">Current Portfolio Value</div>
+          <div className="stat-value text-lg">
+            {fundValue !== undefined ? formatAsCurrency(portfolioValue, 6, symbol || "") : "—"}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">Return</div>
+          <div className="stat-value text-lg">
+            {loadingAgg || fundValue === undefined ? (
+              <span className="loading loading-spinner loading-xs" />
+            ) : haveDeposits ? (
+              <span className={returnPct.startsWith("-") ? "text-red-600" : "text-green-600"}>{returnPct}%</span>
+            ) : (
+              "0.00%"
+            )}
+          </div>
+        </div>
+      </div>
       <div className="bg-base-100 rounded-md p-4 shadow">
         <PortfolioChart />
+      </div>
+      <div className="mt-6">
+        <FundStatistics />
       </div>
     </div>
   );

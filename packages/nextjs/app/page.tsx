@@ -6,7 +6,6 @@ import { type Abi, encodeFunctionData, formatUnits, parseUnits } from "viem";
 import { useAccount, useCapabilities, useReadContract, useSendCalls, useWriteContract } from "wagmi";
 import ConnectWalletMessage from "~~/components/ConnectWalletMessage";
 import { EIP5972TxNotification } from "~~/components/EIP5792TxNotification";
-import FundStatistics from "~~/components/FundStatistics";
 import NoDepositTokensMessage from "~~/components/NoDepositTokensMessage";
 import ShareholderTransactions from "~~/components/ShareholderTransactions";
 import { IntegerInput, IntegerVariant, formatAsCurrency, isValidInteger } from "~~/components/scaffold-eth";
@@ -453,8 +452,7 @@ const Home: NextPage = () => {
               <ShareholderTransactions refresh={refresh} shareholderAddress={connectedAddress} />
             </div>
 
-            {/* Fund Statistics - Always show regardless of wallet connection */}
-            <FundStatistics refresh={refresh} />
+            {/* Fund statistics moved to Portfolio page */}
           </>
         ) : (
           /* No wallet connected - show connection message */

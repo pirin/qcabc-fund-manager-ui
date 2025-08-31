@@ -89,25 +89,38 @@ const FundStatistics = ({ refresh }: FundStatisticsProps) => {
   ]);
 
   return (
-    <div>
-      <div className="flex justify-center items-center flex-col py-2 sm:flex-row gap-12">
-        <span className="text-sm">
-          Share price: <strong>{formatAsCurrency(sharePrice, 6, String(depositTokenSymbol || ""))}</strong>
-        </span>
-        <span className="text-sm">
-          Fund Total Shares: <strong>{formatAsCurrency(totalSupply, 6, "", 0)}</strong>
-        </span>
-        <span className="text-sm">
-          Fund Total: <strong>{formatAsCurrency(fundValue, 6, String(depositTokenSymbol || ""), 0)}</strong>
-        </span>
-        <span className="text-sm">
-          Fund Portfolio: <strong>{formatAsCurrency(portfolioValue, 6, String(depositTokenSymbol || ""), 0)}</strong>
-        </span>
-        <span className="text-sm">
-          Fund Treasury: <strong>{formatAsCurrency(treasuryBalance, 6, String(depositTokenSymbol || ""), 0)}</strong>
-        </span>
+    <div className="py-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+        <div className="flex flex-col items-center">
+          <span className="text-xs uppercase opacity-70">Share Price</span>
+          <span className="mt-1 text-sm font-semibold">
+            {formatAsCurrency(sharePrice, 6, String(depositTokenSymbol || ""))}
+          </span>
+        </div>
+        <div className="flex flex-col items-center">
+          <span className="text-xs uppercase opacity-70 text-center">Total Shares</span>
+          <span className="mt-1 text-sm font-semibold">{formatAsCurrency(totalSupply, 6, "", 0)}</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <span className="text-xs uppercase opacity-70">Fund Total</span>
+          <span className="mt-1 text-sm font-semibold">
+            {formatAsCurrency(fundValue, 6, String(depositTokenSymbol || ""), 0)}
+          </span>
+        </div>
+        <div className="flex flex-col items-center">
+          <span className="text-xs uppercase opacity-70">Portfolio</span>
+          <span className="mt-1 text-sm font-semibold">
+            {formatAsCurrency(portfolioValue, 6, String(depositTokenSymbol || ""), 0)}
+          </span>
+        </div>
+        <div className="flex flex-col items-center">
+          <span className="text-xs uppercase opacity-70">Treasury</span>
+          <span className="mt-1 text-sm font-semibold">
+            {formatAsCurrency(treasuryBalance, 6, String(depositTokenSymbol || ""), 0)}
+          </span>
+        </div>
       </div>
-      <div className="text-xs opacity-50 text-center pb-2">
+      <div className="text-xs opacity-50 text-center mt-4">
         Portfolio updated{" "}
         <span title={lastPortfolioUpdate ? new Date(Number(lastPortfolioUpdate) * 1000).toUTCString() : "N/A"}>
           {formattedLastPortfolioUpdate}
