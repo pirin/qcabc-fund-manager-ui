@@ -10,7 +10,6 @@ import FundStatistics from "~~/components/FundStatistics";
 import NoDepositTokensMessage from "~~/components/NoDepositTokensMessage";
 import ShareholderTransactions from "~~/components/ShareholderTransactions";
 import { IntegerInput, IntegerVariant, formatAsCurrency, isValidInteger } from "~~/components/scaffold-eth";
-import DeployedContracts from "~~/contracts/deployedContracts";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { getParsedError, notification } from "~~/utils/scaffold-eth";
@@ -52,16 +51,18 @@ const Home: NextPage = () => {
     functionName: "membershipBadge",
   });
 
-  const { data: hasValidMembershipBadge } = useReadContract({
+  const { data: MembershipBadge } = useDeployedContractInfo({ contractName: "MembershipBadge" });
+
+  const { data: hasValidMembershipBadge, isLoading: isMembershipLoading } = useReadContract({
     address: membershipBadgeContract || "",
-    abi: DeployedContracts[84532].MembershipBadge.abi,
+    abi: MembershipBadge?.abi as Abi,
     functionName: "isMembershipValid",
     args: [connectedAddress || ""],
   });
 
   const { data: hasMemebershipBadge } = useReadContract({
     address: membershipBadgeContract || "",
-    abi: DeployedContracts[84532].MembershipBadge.abi,
+    abi: MembershipBadge?.abi as Abi,
     functionName: "balanceOf",
     args: [connectedAddress || ""],
   });
@@ -192,6 +193,19 @@ const Home: NextPage = () => {
     }
   };
 
+  // Gate entire UI if wallet connected but membership invalid
+  if (connectedAddress && hasValidMembershipBadge === false) {
+    return (
+      <div className="flex items-center flex-col flex-grow">
+        <span className="text-center mt-16 max-w-xl">
+          {typeof hasMemebershipBadge === "bigint" && hasMemebershipBadge > 0n
+            ? "Your membership has been temporarily deactivated. Please contact the QCABC Fund team to resolve this issue."
+            : "You need to be a member of the QCABC Fund to access this site."}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex items-center flex-col flex-grow">
@@ -207,15 +221,6 @@ const Home: NextPage = () => {
                 </a>
               </span>
             ) : null}
-
-            {/* Validate Membership Badge */}
-            {!hasValidMembershipBadge && (
-              <span className="text-accent text-center mt-8">
-                {hasMemebershipBadge && hasMemebershipBadge > 0n
-                  ? "You membership has been temporarily deactivated. Please contact the QCABC Fund team to resolve this issue."
-                  : "You need to be a member of the QCABC Fund to be able to deposit funds."}
-              </span>
-            )}
 
             {/* Share Balance */}
             {/* Deposit and Redeem Shares */}

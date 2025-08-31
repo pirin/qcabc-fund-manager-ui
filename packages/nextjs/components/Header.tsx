@@ -7,8 +7,12 @@ import { usePathname } from "next/navigation";
 import { useAccount, useReadContract } from "wagmi";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
-import DeployedContracts from "~~/contracts/deployedContracts";
-import { useOutsideClick, useScaffoldReadContract, useSiteAdmins } from "~~/hooks/scaffold-eth";
+import {
+  useDeployedContractInfo,
+  useOutsideClick,
+  useScaffoldReadContract,
+  useSiteAdmins,
+} from "~~/hooks/scaffold-eth";
 
 type HeaderMenuLink = {
   label: string;
@@ -41,11 +45,7 @@ export const menuLinks: HeaderMenuLink[] = [
   // },
 ];
 
-export const HeaderMenuLinks = (
-  allowAdmin: boolean,
-  showPortfolio: boolean = false,
-  portfolioLoading: boolean = false,
-): React.ReactElement => {
+export const HeaderMenuLinks = (allowAdmin: boolean, showPortfolio: boolean = false): React.ReactElement => {
   const pathname = usePathname();
 
   return (
@@ -70,14 +70,6 @@ export const HeaderMenuLinks = (
             </li>
           );
         })}
-      {/* Loading placeholder for Portfolio while membership badge status resolves */}
-      {portfolioLoading && !showPortfolio && (
-        <li>
-          <span className="py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col opacity-60 pointer-events-none animate-pulse bg-base-200">
-            <span>Portfolio</span>
-          </span>
-        </li>
-      )}
     </>
   );
 };
@@ -105,10 +97,12 @@ export const Header = () => {
     functionName: "membershipBadge",
   });
 
+  const { data: MembershipBadge } = useDeployedContractInfo({ contractName: "MembershipBadge" });
+
   // Check if connected wallet has a valid membership badge
-  const { data: hasValidMembershipBadge, isLoading: isMembershipLoading } = useReadContract({
+  const { data: hasValidMembershipBadge } = useReadContract({
     address: (membershipBadgeContract as string) || "",
-    abi: DeployedContracts[84532].MembershipBadge.abi,
+    abi: MembershipBadge?.abi,
     functionName: "isMembershipValid",
     args: [address || ""],
   });
@@ -136,7 +130,7 @@ export const Header = () => {
                 setIsDrawerOpen(false);
               }}
             >
-              {HeaderMenuLinks(allowAdmin, showPortfolio, isMembershipLoading && !!address)}
+              {HeaderMenuLinks(allowAdmin, showPortfolio)}
             </ul>
           )}
         </div>
@@ -149,7 +143,9 @@ export const Header = () => {
             <span className="text-xs">Fund Manager</span>
           </div>
         </Link>
-  <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">{HeaderMenuLinks(allowAdmin, showPortfolio, isMembershipLoading && !!address)}</ul>
+        <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
+          {HeaderMenuLinks(allowAdmin, showPortfolio)}
+        </ul>
       </div>
       <div className="navbar-center flex-grow w-1/2" />
       <div className="navbar-end mr-4">

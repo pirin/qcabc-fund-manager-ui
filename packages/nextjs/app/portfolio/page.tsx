@@ -4,8 +4,7 @@ import Link from "next/link";
 import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
 import PortfolioChart from "~~/components/PortfolioChart";
-import DeployedContracts from "~~/contracts/deployedContracts";
-import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 const PortfolioPage: NextPage = () => {
   const { address } = useAccount();
@@ -15,9 +14,11 @@ const PortfolioPage: NextPage = () => {
     functionName: "membershipBadge",
   });
 
+  const { data: MembershipBadge } = useDeployedContractInfo({ contractName: "MembershipBadge" });
+
   const { data: hasValidMembershipBadge } = useReadContract({
     address: membershipBadgeContract || "",
-    abi: DeployedContracts[84532].MembershipBadge.abi,
+    abi: MembershipBadge?.abi,
     functionName: "isMembershipValid",
     args: [address || ""],
   });

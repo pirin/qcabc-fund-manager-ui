@@ -6,8 +6,12 @@ import type { NextPage } from "next";
 import { usePublicClient } from "wagmi";
 import ShareholderTable from "~~/components/ShareholdersTable";
 import { AddressInput } from "~~/components/scaffold-eth";
-import DeployedContracts from "~~/contracts/deployedContracts";
-import { useScaffoldReadContract, useScaffoldWriteContract, useSiteAdmins } from "~~/hooks/scaffold-eth";
+import {
+  useDeployedContractInfo,
+  useScaffoldReadContract,
+  useScaffoldWriteContract,
+  useSiteAdmins,
+} from "~~/hooks/scaffold-eth";
 import { isZeroAddress } from "~~/utils/scaffold-eth/common";
 
 const Shareholders: NextPage = () => {
@@ -19,6 +23,8 @@ const Shareholders: NextPage = () => {
     contractName: "FundManager",
     functionName: "membershipBadge",
   });
+
+  const { data: MembershipBadge } = useDeployedContractInfo({ contractName: "MembershipBadge" });
 
   const { writeContractAsync: writeMembershipBadge } = useScaffoldWriteContract({ contractName: "MembershipBadge" });
 
@@ -55,9 +61,14 @@ const Shareholders: NextPage = () => {
                         try {
                           console.log("Checking membership for", mintMembershipTo);
 
+                          if (!MembershipBadge) {
+                            console.error("MembershipBadge contract info not loaded");
+                            return;
+                          }
+
                           const hasValidBadge = await publicClient?.readContract({
                             address: membershipBadge as `0x${string}`,
-                            abi: DeployedContracts[84532].MembershipBadge.abi,
+                            abi: MembershipBadge.abi,
                             functionName: "isMembershipValid",
                             args: [mintMembershipTo as `0x${string}`],
                           });
@@ -69,7 +80,7 @@ const Shareholders: NextPage = () => {
 
                           const hasToken = await publicClient?.readContract({
                             address: membershipBadge as `0x${string}`,
-                            abi: DeployedContracts[84532].MembershipBadge.abi,
+                            abi: MembershipBadge.abi,
                             functionName: "balanceOf",
                             args: [mintMembershipTo as `0x${string}`],
                           });

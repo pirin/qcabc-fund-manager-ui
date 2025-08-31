@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ADMIN_SECTION, ADMIN_SECTION_HEADER } from "../adminUiConstants";
 import type { NextPage } from "next";
 import { useReadContract } from "wagmi";
 import { GetManagementFeesDocument, execute } from "~~/.graphclient";
@@ -8,7 +9,6 @@ import { TransactionHashLink } from "~~/components/TransactionHashLink";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
 import { useDeployedContractInfo, useScaffoldReadContract, useSiteAdmins } from "~~/hooks/scaffold-eth";
-import { ADMIN_SECTION, ADMIN_SECTION_HEADER } from "../adminUiConstants";
 
 type ManagementFeeRecord = {
   id: string;
