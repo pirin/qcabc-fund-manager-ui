@@ -341,15 +341,7 @@ const Admin: NextPage = () => {
 
             {/* Management Fee Section */}
             <div className={settingsRow}>
-              <p className={settingsLabel}>
-                Management Fee (0 to 10%){" "}
-                <button
-                  className="btn btn-secondary text-xs h-6 min-h-6"
-                  onClick={() => router.push("/admin/management-fees")}
-                >
-                  View Fees
-                </button>
-              </p>
+              <p className={settingsLabel}>Management Fee (0 to 10%) </p>
               <div className="flex flex-row gap-4 items-center justify-end">
                 {!isZeroAddress(treasuryWallet || "") ? (
                   <>
@@ -386,6 +378,13 @@ const Admin: NextPage = () => {
                   <p className="text-sm">To enable fees, please set the Treasury Wallet Address below</p>
                 )}
               </div>
+            </div>
+
+            <div className={settingsRow}>
+              <p className={settingsLabel}>Management Fee Details</p>
+              <button className={settingsButton} onClick={() => router.push("/admin/management-fees")}>
+                View Fees
+              </button>{" "}
             </div>
           </div>
 

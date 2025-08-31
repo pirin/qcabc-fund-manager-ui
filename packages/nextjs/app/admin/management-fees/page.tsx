@@ -7,7 +7,7 @@ import { GetManagementFeesDocument, execute } from "~~/.graphclient";
 import { TransactionHashLink } from "~~/components/TransactionHashLink";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
-import { useDeployedContractInfo, useSiteAdmins } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract, useSiteAdmins } from "~~/hooks/scaffold-eth";
 
 type ManagementFeeRecord = {
   id: string;
@@ -23,12 +23,30 @@ const ManagementFees: NextPage = () => {
   const [loading, setLoading] = useState(true);
   const [managementFees, setManagementFees] = useState<ManagementFeeRecord[]>([]);
 
-  // Get deposit token info for display
+  // Deposit token + Treasury (management fee recipient) info
   const { data: MockUSDC } = useDeployedContractInfo({ contractName: "MockUSDC" });
+
+  const { data: depositToken } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "depositToken",
+  });
+
+  const { data: treasuryWallet } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "managementFeeRecipient",
+  });
+
   const { data: depositTokenSymbol } = useReadContract({
-    address: MockUSDC?.address || "",
+    address: depositToken || "",
     abi: MockUSDC?.abi,
     functionName: "symbol",
+  });
+
+  const { data: treasuryWalletBalance } = useReadContract({
+    address: depositToken || "",
+    abi: MockUSDC?.abi,
+    functionName: "balanceOf",
+    args: [treasuryWallet || "0x0000000000000000000000000000000000000000"],
   });
 
   const { allowAdmin } = useSiteAdmins();
@@ -67,7 +85,6 @@ const ManagementFees: NextPage = () => {
         <div className="flex flex-col w-4/5 mx-auto gap-4 mt-4">
           <div className={settingsSection}>
             <p className={sectionHeader}>Management Fees Collected</p>
-
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <span className="loading loading-spinner loading-md"></span>
@@ -129,24 +146,20 @@ const ManagementFees: NextPage = () => {
 
                 {/* Summary */}
 
-                <div className="stats bg-base-200 shadow w-full">
+                <div className="stats bg-base-200 shadow w-full mt-6 rounded-md">
+                  {/* Treasury Balance */}
                   <div className="stat">
-                    <div className="stat-title">Total Fees Collected</div>
-                    <div className="stat-value text-green-600">
-                      {formatAsCurrency(
-                        BigInt(Math.floor(managementFees.reduce((sum, fee) => sum + parseFloat(fee.feeAmount), 0))),
-                        6,
-                        String(depositTokenSymbol || "USDC"),
-                      )}
+                    <div className="stat-title">Treasury Wallet Balance</div>
+                    <div className="stat-value text-lg">
+                      {treasuryWalletBalance !== undefined
+                        ? formatAsCurrency(treasuryWalletBalance as any, 6, String(depositTokenSymbol || "USDC"))
+                        : "—"}
                     </div>
                   </div>
-                  <div className="stat">
-                    <div className="stat-title">Number of Fee Events</div>
-                    <div className="stat-value">{managementFees.length}</div>
-                  </div>
+                  {/* Total Volume */}
                   <div className="stat">
                     <div className="stat-title">Total Volume</div>
-                    <div className="stat-value">
+                    <div className="stat-value text-lg">
                       {formatAsCurrency(
                         BigInt(Math.floor(managementFees.reduce((sum, fee) => sum + parseFloat(fee.depositAmount), 0))),
                         6,
@@ -154,9 +167,10 @@ const ManagementFees: NextPage = () => {
                       )}
                     </div>
                   </div>
+                  {/* Average Fee % */}
                   <div className="stat">
                     <div className="stat-title">Average Fee %</div>
-                    <div className="stat-value text-blue-600">
+                    <div className="stat-value text-lg text-blue-600">
                       {managementFees.length > 0
                         ? (
                             managementFees.reduce(
@@ -166,6 +180,17 @@ const ManagementFees: NextPage = () => {
                           ).toFixed(2)
                         : "0.00"}
                       %
+                    </div>
+                  </div>
+                  {/* Total Fees Collected */}
+                  <div className="stat">
+                    <div className="stat-title">Total Fees Collected</div>
+                    <div className="stat-value text-lg text-green-600">
+                      {formatAsCurrency(
+                        BigInt(Math.floor(managementFees.reduce((sum, fee) => sum + parseFloat(fee.feeAmount), 0))),
+                        6,
+                        String(depositTokenSymbol || "USDC"),
+                      )}
                     </div>
                   </div>
                 </div>
