@@ -4,11 +4,11 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import PortfolioChart from "./PortfolioChart";
+import { useAccount, useReadContract } from "wagmi";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
-import { useOutsideClick } from "~~/hooks/scaffold-eth";
-import { useSiteAdmins } from "~~/hooks/scaffold-eth";
+import DeployedContracts from "~~/contracts/deployedContracts";
+import { useOutsideClick, useScaffoldReadContract, useSiteAdmins } from "~~/hooks/scaffold-eth";
 
 type HeaderMenuLink = {
   label: string;
@@ -24,6 +24,11 @@ export const menuLinks: HeaderMenuLink[] = [
     type: 0,
   },
   {
+    label: "Portfolio",
+    href: "/portfolio",
+    type: 0, // user-level, but we'll also gate by membership badge in render
+  },
+  {
     label: "Administration",
     href: "/admin",
     type: 1,
@@ -36,13 +41,18 @@ export const menuLinks: HeaderMenuLink[] = [
   // },
 ];
 
-export const HeaderMenuLinks = (allowAdmin: boolean): React.ReactElement => {
+export const HeaderMenuLinks = (
+  allowAdmin: boolean,
+  showPortfolio: boolean = false,
+  portfolioLoading: boolean = false,
+): React.ReactElement => {
   const pathname = usePathname();
 
   return (
     <>
       {menuLinks
         .filter(link => allowAdmin || link.type < 1)
+        .filter(link => (link.label === "Portfolio" ? showPortfolio : true))
         .map(({ label, href, icon }) => {
           const isActive = pathname === href;
           return (
@@ -60,6 +70,14 @@ export const HeaderMenuLinks = (allowAdmin: boolean): React.ReactElement => {
             </li>
           );
         })}
+      {/* Loading placeholder for Portfolio while membership badge status resolves */}
+      {portfolioLoading && !showPortfolio && (
+        <li>
+          <span className="py-1.5 px-3 text-sm rounded-full gap-2 grid grid-flow-col opacity-60 pointer-events-none animate-pulse bg-base-200">
+            <span>Portfolio</span>
+          </span>
+        </li>
+      )}
     </>
   );
 };
@@ -79,6 +97,23 @@ export const Header = () => {
   );
 
   const { allowAdmin } = useSiteAdmins();
+  const { address } = useAccount();
+
+  // Membership badge contract address from FundManager
+  const { data: membershipBadgeContract } = useScaffoldReadContract({
+    contractName: "FundManager",
+    functionName: "membershipBadge",
+  });
+
+  // Check if connected wallet has a valid membership badge
+  const { data: hasValidMembershipBadge, isLoading: isMembershipLoading } = useReadContract({
+    address: (membershipBadgeContract as string) || "",
+    abi: DeployedContracts[84532].MembershipBadge.abi,
+    functionName: "isMembershipValid",
+    args: [address || ""],
+  });
+
+  const showPortfolio = Boolean(address && hasValidMembershipBadge);
 
   return (
     <div className="sticky lg:static top-0 navbar bg-base-100 py-0 min-h-0 flex-shrink-0 justify-between z-20 shadow-sm shadow-secondary px-0 sm:px-2">
@@ -101,7 +136,7 @@ export const Header = () => {
                 setIsDrawerOpen(false);
               }}
             >
-              {HeaderMenuLinks(allowAdmin)}
+              {HeaderMenuLinks(allowAdmin, showPortfolio, isMembershipLoading && !!address)}
             </ul>
           )}
         </div>
@@ -114,11 +149,9 @@ export const Header = () => {
             <span className="text-xs">Fund Manager</span>
           </div>
         </Link>
-        <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">{HeaderMenuLinks(allowAdmin)}</ul>
+  <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">{HeaderMenuLinks(allowAdmin, showPortfolio, isMembershipLoading && !!address)}</ul>
       </div>
-      <div className="navbar-center flex-grow w-1/2">
-        <PortfolioChart />
-      </div>
+      <div className="navbar-center flex-grow w-1/2" />
       <div className="navbar-end mr-4">
         <RainbowKitCustomConnectButton />
         {/* {isLocalNetwork && <FaucetButton />}
