@@ -8,6 +8,7 @@ import { TransactionHashLink } from "~~/components/TransactionHashLink";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
 import { useDeployedContractInfo, useScaffoldReadContract, useSiteAdmins } from "~~/hooks/scaffold-eth";
+import { ADMIN_SECTION, ADMIN_SECTION_HEADER } from "../adminUiConstants";
 
 type ManagementFeeRecord = {
   id: string;
@@ -76,8 +77,8 @@ const ManagementFees: NextPage = () => {
     fetchManagementFees();
   }, []);
 
-  const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4";
-  const sectionHeader = "text-xl text-accent";
+  const settingsSection = ADMIN_SECTION;
+  const sectionHeader = ADMIN_SECTION_HEADER;
 
   return (
     <>

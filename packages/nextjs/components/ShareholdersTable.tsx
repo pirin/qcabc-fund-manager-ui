@@ -40,10 +40,10 @@ const ShareholdersTable = () => {
     <div className="flex justify-center p-4 w-full">
       <table className="table-sm w-full">
         <thead>
-          <tr className="text-md text-center text-accent border-b border-accent">
+          <tr className="text-md text-left border-b">
             <th></th>
-            <th>Current and Past Shareholders</th>
-            <th>Shares</th>
+            <th>Shareholders</th>
+            <th className="text-center">Shares</th>
           </tr>
         </thead>
         <tbody>
@@ -60,8 +60,8 @@ const ShareholdersTable = () => {
         <tfoot>
           <tr>
             <td></td>
-            <td className="text-right text-accent">Total Shares:</td>
-            <td className="text-right border-t-2 text-accent border-accent">{formatAsCurrency(totalShares)}</td>
+            <td className="text-right">Total Shares:</td>
+            <td className="text-right border-t-2">{formatAsCurrency(totalShares)}</td>
           </tr>
         </tfoot>
       </table>

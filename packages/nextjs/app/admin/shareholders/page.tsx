@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ADMIN_BUTTON, ADMIN_LABEL, ADMIN_ROW, ADMIN_SECTION } from "../adminUiConstants";
 import type { NextPage } from "next";
 import { usePublicClient } from "wagmi";
 import ShareholderTable from "~~/components/ShareholdersTable";
@@ -24,11 +25,10 @@ const Shareholders: NextPage = () => {
   const { allowAdmin } = useSiteAdmins();
   const publicClient = usePublicClient();
 
-  const settingsSection = "flex flex-col mx-auto bg-base-100 w-full rounded-md px-4 pb-4";
-  const sectionHeader = "text-xl text-accent";
-  const settingsRow = "flex justify-between items-center px-4 flex-col sm:flex-row gap-12";
-  const settingsLabel = "flex-1 text-left text opacity-70";
-  const settingsButton = "btn btn-secondary btn-sm";
+  const settingsSection = ADMIN_SECTION;
+  const settingsRow = ADMIN_ROW;
+  const settingsLabel = ADMIN_LABEL;
+  const settingsButton = ADMIN_BUTTON;
 
   return (
     <>
@@ -36,8 +36,6 @@ const Shareholders: NextPage = () => {
         <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
           {/* Shareholders Section */}
           <div className={settingsSection}>
-            <p className={sectionHeader}>Fund Shareholders</p>
-
             <ShareholderTable />
 
             {/* Minting, Activating and Deactivating of Membership Badges */}
