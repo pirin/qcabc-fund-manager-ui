@@ -98,15 +98,15 @@ const PortfolioChart = ({ refresh }: PortfolioChartProps) => {
       {/* @ts-ignore - Ignoring type issues with Recharts components */}
       <ResponsiveContainer width="100%" height="100%">
         {/* @ts-ignore */}
-        <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
           {/* @ts-ignore */}
-          <XAxis dataKey="date" textAnchor="end" height={0} axisLine={false} tick={false} />
+          <XAxis dataKey="date" textAnchor="end" height={0} axisLine={true} tick={true} />
           {/* @ts-ignore */}
           <YAxis
             yAxisId="left"
             tickCount={3}
-            tick={false}
-            axisLine={false}
+            tick={true}
+            axisLine={true}
             width={0}
             tickFormatter={value => formatAsCurrency(BigInt(Math.floor(Number(value) * 1000000)), 6, "USDC", 0)}
           />

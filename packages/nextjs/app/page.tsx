@@ -53,7 +53,7 @@ const Home: NextPage = () => {
 
   const { data: MembershipBadge } = useDeployedContractInfo({ contractName: "MembershipBadge" });
 
-  const { data: hasValidMembershipBadge, isLoading: isMembershipLoading } = useReadContract({
+  const { data: hasValidMembershipBadge } = useReadContract({
     address: membershipBadgeContract || "",
     abi: MembershipBadge?.abi as Abi,
     functionName: "isMembershipValid",
