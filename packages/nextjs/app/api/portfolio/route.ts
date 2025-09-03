@@ -89,6 +89,18 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const url = new URL(req.url);
+    if (url.searchParams.has("holdings")) {
+      console.info(`Oracle value is good! Request is just for the portfolio holdings. Returning portfolio holdings...`);
+      return NextResponse.json({
+        portfolioValue: value.portfolioValue,
+        lastUpdated: value.lastUpdated.toISOString(),
+        oraclePortfolioValueDeviation: value.priceDeviation ? value.priceDeviation.toFixed(2) + "%" : "N/A",
+        source: value.source,
+        holdings: value.holdings,
+      });
+    }
+
     console.info(`Oracle value is good! Publishing to ${chainName}...`);
 
     // Only try to update the contract if we have valid contract info

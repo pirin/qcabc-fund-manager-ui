@@ -1,14 +1,22 @@
+import { Hardcoded } from "./hardcoded";
+
 export interface PortfolioValue {
   formattedValue: bigint;
   portfolioValue: number;
   lastUpdated: Date | null;
   source?: string;
   priceDeviation?: number;
+  holdings?: PortfolioWallet[];
 }
 
 interface PortfolioWallet {
-  valueSynced: number;
-  walletAddress: string;
+  wallet?: string;
+  symbol?: string;
+  chain?: string;
+  walletAddress?: string;
+  balance?: number;
+  spot?: number;
+  valueSynced?: number;
 }
 
 export class PortfolioOracle {
@@ -119,6 +127,10 @@ export class PortfolioOracle {
       }
 
       const data = await response.json();
+
+      //TODO: Remove it once endpoints tart supplying the portfolio
+      if (!data.portfolio) data.portfolio = Hardcoded.portfolio;
+
       return this.calculatePortfolioValue(data);
     } catch (error) {
       console.error("Error fetching portfolio value:", error);
@@ -142,12 +154,14 @@ export class PortfolioOracle {
     // Calculate sum of all valueSynced (excluding the balances in the fund manager wallet if it is present)
     portfolioValue = data.portfolio.reduce(
       (sum: number, wallet: PortfolioWallet) =>
-        wallet.walletAddress?.toLowerCase() !== this.fundManagerAddress.toLowerCase() ? sum + wallet.valueSynced : sum,
+        wallet.walletAddress?.toLowerCase() !== this.fundManagerAddress.toLowerCase()
+          ? sum + (wallet.valueSynced || 0)
+          : sum,
       0,
     );
 
     formattedValue = BigInt(parseInt((portfolioValue * 1000000).toString(), 10));
 
-    return { formattedValue, portfolioValue, lastUpdated } as PortfolioValue;
+    return { formattedValue, portfolioValue, lastUpdated, holdings: data.portfolio } as PortfolioValue;
   }
 }
