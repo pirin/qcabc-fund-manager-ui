@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PortfolioWallet } from "../api/portfolio/PortfolioOracle";
 import type { NextPage } from "next";
@@ -18,6 +18,7 @@ const PortfolioPage: NextPage = () => {
   const [loadingAgg, setLoadingAgg] = useState<boolean>(true);
   const [errorAgg, setErrorAgg] = useState<any>(null);
   const [totalDeposits, setTotalDeposits] = useState<bigint>(0n);
+  const [lifespanDays, setLifespanDays] = useState<number | null>(null); // days since first deposit
   // holdings state
   const [holdings, setHoldings] = useState<PortfolioWallet[]>([]);
   const [holdingsLoading, setHoldingsLoading] = useState<boolean>(true);
@@ -55,6 +56,12 @@ const PortfolioPage: NextPage = () => {
     args: [address || ""],
   });
 
+  // Consistent card style (must be before any conditional early returns so hook order is stable)
+  const cardClass = useMemo(
+    () => "rounded-sm border border-base-300/60 bg-base-100/80 backdrop-blur-sm p-5 shadow-sm flex flex-col gap-2",
+    [],
+  );
+
   // Aggregate deposits across all shareholders via subgraph
   useEffect(() => {
     const fetchAggregates = async () => {
@@ -64,16 +71,24 @@ const PortfolioPage: NextPage = () => {
         const { data } = await execute(GetShareholdersDocument, {} as any);
         if (data?.shareholders) {
           let sum: bigint = 0n;
+          let earliest: number | null = null;
           for (const sh of data.shareholders) {
             for (const dep of sh.deposits || []) {
               try {
                 sum += BigInt(dep.depositAmount);
+                const ts = Number(dep.blockTimestamp);
+                if (!earliest || ts < earliest) earliest = ts;
               } catch {
-                // ignore malformed
+                // ignore malformed deposit entries
               }
             }
           }
           setTotalDeposits(sum);
+          if (earliest) {
+            const nowSec = Math.floor(Date.now() / 1000);
+            const diffDays = Math.max(0, Math.floor((nowSec - earliest) / 86400));
+            setLifespanDays(diffDays);
+          }
         }
       } catch (e) {
         setErrorAgg(e);
@@ -135,13 +150,17 @@ const PortfolioPage: NextPage = () => {
       returnPct = ((diff / base) * 100).toFixed(2);
     }
   }
+  const profitLoss = haveDeposits ? portfolioValue - totalDeposits : 0n;
+  const profitLossAbs = profitLoss < 0n ? -profitLoss : profitLoss;
+  const profitLossSignedFormatted = (profitLoss >= 0n ? "" : "-") + formatAsCurrency(profitLossAbs, 6, symbol || "");
 
   return (
-    <div className="w-full max-w-5xl mx-auto mt-6 p-4">
-      <div className="stats w-full mb-6 ">
-        <div className="stat">
-          <div className="stat-title">Total Deposits</div>
-          <div className="stat-value text-lg">
+    <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-6">
+      {/* Top Metrics */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={cardClass}>
+          <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Total Deposits</span>
+          <span className="text-2xl font-semibold tabular-nums">
             {loadingAgg ? (
               <span className="loading loading-spinner loading-xs" />
             ) : errorAgg ? (
@@ -149,49 +168,79 @@ const PortfolioPage: NextPage = () => {
             ) : (
               formatAsCurrency(totalDeposits, 6, symbol || "")
             )}
-          </div>
+          </span>
         </div>
-        <div className="stat">
-          <div className="stat-title">Current Portfolio Value</div>
-          <div className="stat-value text-lg">
+        <div className={cardClass}>
+          <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Portfolio Value</span>
+          <span className="text-2xl font-semibold tabular-nums">
             {fundValue !== undefined ? formatAsCurrency(portfolioValue, 6, symbol || "") : "—"}
-          </div>
+          </span>
         </div>
-        <div className="stat">
-          <div className="stat-title">Return</div>
-          <div className="stat-value text-lg">
+        <div className={cardClass + " hidden xl:flex"}>
+          <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Profit / Loss</span>
+          <span
+            className={`text-2xl font-semibold tabular-nums ${profitLoss === 0n ? "" : profitLoss > 0n ? "text-success" : "text-error"}`}
+          >
             {loadingAgg || fundValue === undefined ? (
               <span className="loading loading-spinner loading-xs" />
-            ) : haveDeposits ? (
-              <span className={returnPct.startsWith("-") ? "text-red-600" : "text-green-600"}>{returnPct}%</span>
             ) : (
-              "0.00%"
+              profitLossSignedFormatted
             )}
+          </span>
+          <span className="text-xs opacity-60">{haveDeposits ? returnPct + "%" : "0.00%"}</span>
+        </div>
+        <div className={cardClass}>
+          <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Fund Lifespan</span>
+          <span className="text-2xl font-semibold tabular-nums">
+            {loadingAgg ? (
+              <span className="loading loading-spinner loading-xs" />
+            ) : lifespanDays !== null ? (
+              lifespanDays
+            ) : (
+              "—"
+            )}
+          </span>
+          <span className="text-xs opacity-60">days since first deposit</span>
+        </div>
+      </div>
+
+      {/* Value + Allocation Charts */}
+      <div className="grid gap-5 md:grid-cols-3">
+        <div className={`md:col-span-2 ${cardClass}`}>
+          <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">
+            Portfolio Value (Last 4d)
+          </span>
+          <div className="mt-2">
+            <PortfolioValueChart height={260} />
+          </div>
+        </div>
+        <div className={cardClass}>
+          <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Allocation</span>
+          <div className="mt-2">
+            <PortfolioAllocationChart holdings={holdings} height={260} />
           </div>
         </div>
       </div>
-      <div className="bg-base-100 rounded-md p-4 shadow">
-        <PortfolioValueChart />
-      </div>
-      <div className="mt-6">
+
+      {/* Holdings */}
+      <div className={cardClass}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-base-content/60">Holdings</h2>
+        </div>
         {holdingsLoading ? (
-          <div className="flex items-center gap-2">
-            <span className="loading loading-spinner loading-sm" /> Loading holdings...
+          <div className="flex items-center gap-2 min-h-[120px] justify-center">
+            <span className="loading loading-spinner loading-sm" />
+            <span className="text-sm">Loading holdings...</span>
           </div>
         ) : holdingsError ? (
           <div className="text-error">{holdingsError}</div>
         ) : (
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-2/3">
-              <PortfolioHoldings holdings={holdings} />
-            </div>
-            <div className="md:w-1/3 bg-base-100 rounded-md p-4 shadow h-fit">
-              <PortfolioAllocationChart holdings={holdings} height={320} />
-            </div>
-          </div>
+          <PortfolioHoldings holdings={holdings} />
         )}
       </div>
-      <div className="mt-6">
+
+      {/* Fund Stats (no card wrapper as requested) */}
+      <div className="pt-2">
         <FundStatistics />
       </div>
     </div>
