@@ -38,7 +38,7 @@ Main Next.js application with:
 - **FundStatistics**: Displays fund performance metrics and portfolio data
 - **ShareholderTransactions**: Shows transaction history for fund participants
 - **ShareholdersTable**: Lists all fund shareholders with their positions
-- **PortfolioChart**: Visualizes fund performance over time
+- **PortfolioValueChart**: Visualizes fund performance over time
 - **ConnectWalletMessage/NoDepositTokensMessage**: User onboarding components
 
 ## Blockchain Integration

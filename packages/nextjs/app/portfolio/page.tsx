@@ -7,8 +7,9 @@ import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
 import { GetShareholdersDocument, execute } from "~~/.graphclient";
 import FundStatistics from "~~/components/FundStatistics";
-import PortfolioChart from "~~/components/PortfolioChart";
+import PortfolioAllocationChart from "~~/components/PortfolioAllocationChart";
 import PortfolioHoldings from "~~/components/PortfolioHoldings";
+import PortfolioValueChart from "~~/components/PortfolioValueChart";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
@@ -170,7 +171,7 @@ const PortfolioPage: NextPage = () => {
         </div>
       </div>
       <div className="bg-base-100 rounded-md p-4 shadow">
-        <PortfolioChart />
+        <PortfolioValueChart />
       </div>
       <div className="mt-6">
         {holdingsLoading ? (
@@ -180,7 +181,14 @@ const PortfolioPage: NextPage = () => {
         ) : holdingsError ? (
           <div className="text-error">{holdingsError}</div>
         ) : (
-          <PortfolioHoldings holdings={holdings} />
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-2/3">
+              <PortfolioHoldings holdings={holdings} />
+            </div>
+            <div className="md:w-1/3 bg-base-100 rounded-md p-4 shadow h-fit">
+              <PortfolioAllocationChart holdings={holdings} height={320} />
+            </div>
+          </div>
         )}
       </div>
       <div className="mt-6">

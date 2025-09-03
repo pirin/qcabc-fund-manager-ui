@@ -23,7 +23,7 @@ type ChartDataPoint = {
   sharePrice: number;
 };
 
-type PortfolioChartProps = {
+type PortfolioValueChartProps = {
   refresh?: boolean;
   height?: number | string; // allow overriding height when embedding
 };
@@ -33,7 +33,7 @@ const normalizeValue = (value: string): number => {
   return Number(value) / 1000000;
 };
 
-const PortfolioChart = ({ refresh, height = 200 }: PortfolioChartProps) => {
+const PortfolioValueChart = ({ refresh, height = 200 }: PortfolioValueChartProps) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -58,7 +58,7 @@ const PortfolioChart = ({ refresh, height = 200 }: PortfolioChartProps) => {
               portfolioValue: normalizeValue(update.newPortfolioValue),
               sharePrice: normalizeValue(update.newSharePrice),
             }))
-            .filter((data: any) => data.timestamp > new Date().getTime() - 4 * 24 * 60 * 60 * 1000); // Filter data for the last 30 days
+            .filter((data: any) => data.timestamp > new Date().getTime() - 4 * 24 * 60 * 60 * 1000); // Filter data for the last 4 days
           setChartData(processedData);
         }
       } catch (err) {
@@ -146,4 +146,4 @@ const PortfolioChart = ({ refresh, height = 200 }: PortfolioChartProps) => {
   );
 };
 
-export default PortfolioChart;
+export default PortfolioValueChart;
