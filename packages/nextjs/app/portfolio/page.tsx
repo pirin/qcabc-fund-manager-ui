@@ -208,7 +208,7 @@ const PortfolioPage: NextPage = () => {
       <div className="grid gap-5 md:grid-cols-3">
         <div className={`md:col-span-2 ${cardClass}`}>
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">
-            Portfolio Value (Last 4d)
+            Portfolio Value (Last 30d)
           </span>
           <div className="mt-2">
             <PortfolioValueChart height={260} />

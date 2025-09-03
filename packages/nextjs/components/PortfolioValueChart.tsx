@@ -58,7 +58,7 @@ const PortfolioValueChart = ({ refresh, height = 200 }: PortfolioValueChartProps
               portfolioValue: normalizeValue(update.newPortfolioValue),
               sharePrice: normalizeValue(update.newSharePrice),
             }))
-            .filter((data: any) => data.timestamp > new Date().getTime() - 4 * 24 * 60 * 60 * 1000); // Filter data for the last 4 days
+            .filter((data: any) => data.timestamp > new Date().getTime() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
           setChartData(processedData);
         }
       } catch (err) {
