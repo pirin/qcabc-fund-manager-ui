@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { PortfolioWallet } from "../api/portfolio/PortfolioOracle";
 import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
 import { GetShareholdersDocument, execute } from "~~/.graphclient";
 import FundStatistics from "~~/components/FundStatistics";
 import PortfolioChart from "~~/components/PortfolioChart";
+import PortfolioHoldings from "~~/components/PortfolioHoldings";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
 import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
@@ -15,6 +17,10 @@ const PortfolioPage: NextPage = () => {
   const [loadingAgg, setLoadingAgg] = useState<boolean>(true);
   const [errorAgg, setErrorAgg] = useState<any>(null);
   const [totalDeposits, setTotalDeposits] = useState<bigint>(0n);
+  // holdings state
+  const [holdings, setHoldings] = useState<PortfolioWallet[]>([]);
+  const [holdingsLoading, setHoldingsLoading] = useState<boolean>(true);
+  const [holdingsError, setHoldingsError] = useState<string | null>(null);
 
   // Fund value (current portfolio value)
   const { data: fundValue } = useScaffoldReadContract({
@@ -77,6 +83,26 @@ const PortfolioPage: NextPage = () => {
     fetchAggregates();
   }, [hasValidMembershipBadge]);
 
+  useEffect(() => {
+    const fetchHoldings = async () => {
+      if (!hasValidMembershipBadge) return;
+      try {
+        setHoldingsLoading(true);
+        const res = await fetch(`/api/portfolio?holdings=1`, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch holdings: ${res.status}`);
+        }
+        const json = await res.json();
+        setHoldings(json.holdings || []);
+      } catch (e: any) {
+        setHoldingsError(e.message || "Unknown error");
+      } finally {
+        setHoldingsLoading(false);
+      }
+    };
+    fetchHoldings();
+  }, [hasValidMembershipBadge]);
+
   if (!address) {
     return (
       <div className="flex flex-col items-center mt-10 gap-4">
@@ -111,8 +137,7 @@ const PortfolioPage: NextPage = () => {
 
   return (
     <div className="w-full max-w-5xl mx-auto mt-6 p-4">
-      <h1 className="text-2xl font-semibold mb-4">Portfolio Performance</h1>
-      <div className="stats bg-base-200 shadow w-full mb-6 rounded-md">
+      <div className="stats w-full mb-6 ">
         <div className="stat">
           <div className="stat-title">Total Deposits</div>
           <div className="stat-value text-lg">
@@ -146,6 +171,17 @@ const PortfolioPage: NextPage = () => {
       </div>
       <div className="bg-base-100 rounded-md p-4 shadow">
         <PortfolioChart />
+      </div>
+      <div className="mt-6">
+        {holdingsLoading ? (
+          <div className="flex items-center gap-2">
+            <span className="loading loading-spinner loading-sm" /> Loading holdings...
+          </div>
+        ) : holdingsError ? (
+          <div className="text-error">{holdingsError}</div>
+        ) : (
+          <PortfolioHoldings holdings={holdings} />
+        )}
       </div>
       <div className="mt-6">
         <FundStatistics />

@@ -8,13 +8,13 @@ export interface PortfolioValue {
   priceDeviation?: number;
   holdings?: PortfolioWallet[];
 }
-
-interface PortfolioWallet {
+// Shared wallet/holding shape (reused by client). Some fields optional depending on data source.
+export interface PortfolioWallet {
   wallet?: string;
   symbol?: string;
   chain?: string;
   walletAddress?: string;
-  balance?: number;
+  chainBalance?: number;
   spot?: number;
   valueSynced?: number;
 }
