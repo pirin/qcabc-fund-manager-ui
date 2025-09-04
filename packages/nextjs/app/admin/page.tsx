@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ADMIN_BUTTON, ADMIN_LABEL, ADMIN_ROW, ADMIN_SECTION, ADMIN_SECTION_HEADER } from "./adminUiConstants";
+import { ADMIN_BUTTON, ADMIN_LABEL, ADMIN_ROW, ADMIN_SECTION_HEADER } from "./adminUiConstants";
 import { formatDistanceToNow } from "date-fns";
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
@@ -11,6 +11,7 @@ import { NotificationBubble } from "~~/components/NotificationBubble";
 import { AddressInput, InputBase, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
 import { Address } from "~~/components/scaffold-eth";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
+import { Card } from "~~/components/ui/Card";
 import {
   useDeployedContractInfo,
   useScaffoldReadContract,
@@ -196,33 +197,48 @@ const Admin: NextPage = () => {
 
   //console.log(`= Loaded values => Contract Fee: ${managementFee}, UI Fee: ${Number(parseUnits(newMgmtFee, 2))}`);
 
-  const settingsSection = ADMIN_SECTION;
   const sectionHeader = ADMIN_SECTION_HEADER;
   const settingsRow = ADMIN_ROW;
   const settingsLabel = ADMIN_LABEL;
   const settingsButton = ADMIN_BUTTON;
+
+  // Derived / formatted metrics for top grid
+  const sharePriceFormatted = sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : "0.00";
+  const fundValueFormatted = formatAsCurrency(fundValue, 6, "USDC");
+  const treasuryBalanceFormatted = formattedTreasuryBalance + " " + String(depositTokenSymbol || "");
+  const portfolioValueFormatted = formatAsCurrency(portfolioValue, 6, "USDC");
+  const totalSharesFormatted = formatAsCurrency(totalShares, 6, "", 0);
+  const redemptionsStatus = redemptionsAllowed ? "Allowed" : "Paused";
+  const metrics = [
+    { label: "Fund Value", value: fundValueFormatted },
+    { label: "Treasury", value: treasuryBalanceFormatted },
+    { label: "Portfolio Value", value: portfolioValueFormatted },
+    { label: "Share Price", value: `${sharePriceFormatted} USDC` },
+    { label: "Total Shares", value: totalSharesFormatted },
+    { label: "Redemptions", value: redemptionsStatus, className: redemptionsAllowed ? "text-success" : "text-error" },
+  ];
   return (
     <>
       {allowAdmin ? (
-        <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
-          {/* Fund Valuation Section */}
-          <div className={settingsSection}>
+        <div className="flex flex-col max-w-[1400px] mx-auto gap-6 mt-6 px-6">
+          {/* Top Metrics */}
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+            {metrics.map((m, i) => (
+              <Card key={i} className="!p-4 gap-1">
+                <span className="text-[10px] font-medium uppercase tracking-wide opacity-60">{m.label}</span>
+                <span className={`text-sm font-semibold tabular-nums ${m.className || ""}`}>{m.value}</span>
+              </Card>
+            ))}
+          </div>
+
+          {/* Fund Valuation / Portfolio Management */}
+          <Card className="w-full !p-4 gap-4">
             <p className={sectionHeader}>Fund Valuation</p>
 
+            {/* Set portfolio value */}
             <div className={settingsRow}>
-              <p className={settingsLabel}>Total Fund Value (Deposits Balance + Porfolio Value)</p>
-              <p className="flex-1 text-right">{formatAsCurrency(fundValue, 6, "USDC")}</p>
-            </div>
+              <p className={settingsLabel}>Set portfolio Value</p>
 
-            <div className={settingsRow}>
-              <p className={settingsLabel}>Deposits Balance</p>
-              <p className="flex-1 text-right">
-                {formattedTreasuryBalance} {String(depositTokenSymbol || "")}
-              </p>
-            </div>
-
-            <div className={settingsRow}>
-              <p className={settingsLabel}>Portfolio Value</p>
               <div className="flex flex-row gap-4 items-center justify-end">
                 <span className="w-36">
                   <InputBase
@@ -234,7 +250,8 @@ const Admin: NextPage = () => {
                     placeholder={formatAsCurrency(portfolioValue)}
                   />
                 </span>
-                USDC
+
+                {String(depositTokenSymbol || "")}
                 <button
                   className={settingsButton}
                   disabled={!newPortfolioValue}
@@ -253,22 +270,25 @@ const Admin: NextPage = () => {
                 </button>
               </div>
             </div>
+
             <div className={settingsRow}>
-              <p className={settingsLabel}>Last portfolio value updated</p>
-              <p className="flex-1 text-right"> {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}</p>
+              <p className={settingsLabel}>
+                Last update: {portfolioUpdating ? "Refreshing..." : formattedLastPortfolioUpdate}
+              </p>
               <button className={settingsButton} onClick={refreshPortfolio} disabled={portfolioUpdating}>
                 {!portfolioUpdating ? "Refresh" : <span className="loading loading-spinner loading-xs"></span>}
               </button>
             </div>
-          </div>
+          </Card>
 
-          {/* Deposits and Redemptions Section */}
-          <div className={settingsSection}>
-            <p className={sectionHeader}>Deposits and Redemptions</p>
+          {/* Treasury & Redemptions */}
+          <Card className="w-full !p-4 gap-4">
+            <p className={sectionHeader}>Treasury & Redemptions</p>
 
             {/* Transfer funds to the Investment Wallet */}
             <div className={settingsRow}>
               <p className={settingsLabel}>Transfer funds to the Investment Wallet</p>
+
               <div className="flex flex-row gap-4 items-center justify-end">
                 <span className="w-36">
                   <InputBase
@@ -387,27 +407,10 @@ const Admin: NextPage = () => {
                 View Fees
               </button>{" "}
             </div>
-          </div>
+          </Card>
 
-          {/* Fund Shares Section */}
-          <div className={settingsSection}>
-            <p className={sectionHeader}>Fund Shares</p>
-
-            <div className={settingsRow}>
-              <p className={settingsLabel}>Total Shares</p>
-              <p className="flex-1 text-right">{formatAsCurrency(totalShares)}</p>
-            </div>
-
-            <div className={settingsRow}>
-              <p className={settingsLabel}>Share Price</p>
-              <p className="flex-1 text-right">
-                {sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : 0} USDC
-              </p>
-            </div>
-          </div>
-
-          {/* Shareholders Section */}
-          <div className={settingsSection}>
+          {/* Shareholders */}
+          <Card className="w-full !p-4 gap-4">
             <p className={sectionHeader}>Shareholders</p>
             <div className={settingsRow}>
               <p className={settingsLabel}>Manage fund shareholders and membership badges</p>
@@ -415,11 +418,11 @@ const Admin: NextPage = () => {
                 View Shareholders
               </button>
             </div>
-          </div>
+          </Card>
 
-          {/* Contract Info Section */}
-          <div className={settingsSection}>
-            <p className={sectionHeader}>Contract Info</p>
+          {/* Contracts */}
+          <Card className="w-full !p-4 gap-4">
+            <p className={sectionHeader}>Contracts</p>
             <div className={settingsRow}>
               <p className={settingsLabel}>Fund Manager Contract</p>
               <p className="flex-1 text-right">v{fundManagerVersion}</p>
@@ -527,11 +530,11 @@ const Admin: NextPage = () => {
               </p>
               <Address address={depositToken} />
             </div>
-          </div>
+          </Card>
 
-          {/* Oracle Settings Section */}
-          <div className={settingsSection}>
-            <p className={sectionHeader}>Portfolio Value Oracles</p>
+          {/* Oracles */}
+          <Card className="w-full !p-4 gap-4">
+            <p className={sectionHeader}>Oracles</p>
 
             <div className={settingsRow}>
               <p className={settingsLabel}>Reject Oracle update if it is older than</p>
@@ -580,10 +583,10 @@ const Admin: NextPage = () => {
                 </button>
               </span>
             </div>
-          </div>
+          </Card>
         </div>
       ) : (
-        <div className="flex flex-col w-2/3 mx-auto gap-4 mt-4">
+        <div className="flex flex-col max-w-[1400px] mx-auto gap-4 mt-6 px-6">
           <p className="text-2xl text-center font-bold">Sorry, you are not an admin!</p>
         </div>
       )}

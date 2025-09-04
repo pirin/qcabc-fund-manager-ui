@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PortfolioWallet } from "../api/portfolio/PortfolioOracle";
 import type { NextPage } from "next";
@@ -11,6 +11,7 @@ import PortfolioAllocationChart from "~~/components/PortfolioAllocationChart";
 import PortfolioHoldings from "~~/components/PortfolioHoldings";
 import PortfolioValueChart from "~~/components/PortfolioValueChart";
 import { formatAsCurrency } from "~~/components/scaffold-eth";
+import { Card } from "~~/components/ui/Card";
 import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 const PortfolioPage: NextPage = () => {
@@ -56,11 +57,7 @@ const PortfolioPage: NextPage = () => {
     args: [address || ""],
   });
 
-  // Consistent card style (must be before any conditional early returns so hook order is stable)
-  const cardClass = useMemo(
-    () => "rounded-sm border border-base-300/60 bg-base-100/80 backdrop-blur-sm p-5 shadow-sm flex flex-col gap-2",
-    [],
-  );
+  // Using global baseCardClass via Card component
 
   // Aggregate deposits across all shareholders via subgraph
   useEffect(() => {
@@ -158,7 +155,7 @@ const PortfolioPage: NextPage = () => {
     <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-6">
       {/* Top Metrics */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <div className={cardClass}>
+        <Card>
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Total Deposits</span>
           <span className="text-2xl font-semibold tabular-nums">
             {loadingAgg ? (
@@ -169,14 +166,14 @@ const PortfolioPage: NextPage = () => {
               formatAsCurrency(totalDeposits, 6, symbol || "")
             )}
           </span>
-        </div>
-        <div className={cardClass}>
+        </Card>
+        <Card>
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Portfolio Value</span>
           <span className="text-2xl font-semibold tabular-nums">
             {fundValue !== undefined ? formatAsCurrency(portfolioValue, 6, symbol || "") : "—"}
           </span>
-        </div>
-        <div className={cardClass + " hidden xl:flex"}>
+        </Card>
+        <Card className="hidden xl:flex">
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Profit / Loss</span>
           <span
             className={`text-2xl font-semibold tabular-nums ${profitLoss === 0n ? "" : profitLoss > 0n ? "text-success" : "text-error"}`}
@@ -188,8 +185,8 @@ const PortfolioPage: NextPage = () => {
             )}
           </span>
           <span className="text-xs opacity-60">{haveDeposits ? returnPct + "%" : "0.00%"}</span>
-        </div>
-        <div className={cardClass}>
+        </Card>
+        <Card>
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Fund Lifespan</span>
           <span className="text-2xl font-semibold tabular-nums">
             {loadingAgg ? (
@@ -201,29 +198,29 @@ const PortfolioPage: NextPage = () => {
             )}
           </span>
           <span className="text-xs opacity-60">days since first deposit</span>
-        </div>
+        </Card>
       </div>
 
       {/* Value + Allocation Charts */}
       <div className="grid gap-5 md:grid-cols-3">
-        <div className={`md:col-span-2 ${cardClass}`}>
+        <Card className="md:col-span-2">
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">
             Portfolio Value (Last 30d)
           </span>
           <div className="mt-2">
             <PortfolioValueChart height={260} />
           </div>
-        </div>
-        <div className={cardClass}>
+        </Card>
+        <Card>
           <span className="text-xs font-medium uppercase tracking-wide text-base-content/60">Allocation</span>
           <div className="mt-2">
             <PortfolioAllocationChart holdings={holdings} height={260} />
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Holdings */}
-      <div className={cardClass}>
+      <Card>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-medium uppercase tracking-wide text-base-content/60">Holdings</h2>
         </div>
@@ -237,7 +234,7 @@ const PortfolioPage: NextPage = () => {
         ) : (
           <PortfolioHoldings holdings={holdings} />
         )}
-      </div>
+      </Card>
 
       {/* Fund Stats (no card wrapper as requested) */}
       <div className="pt-2">

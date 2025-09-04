@@ -99,54 +99,7 @@ const ManagementFees: NextPage = () => {
               <div className="text-center py-8 text-gray-500">No management fees have been collected yet.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="table table-sm w-full">
-                  <thead>
-                    <tr>
-                      <th>Date & Time</th>
-                      <th>Depositor</th>
-                      <th>Deposit Amount</th>
-                      <th>Fee Amount</th>
-                      <th>Fee %</th>
-                      <th>Transaction</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {managementFees.map(fee => (
-                      <tr key={fee.id} className="hover">
-                        <td className="whitespace-nowrap">
-                          {new Date(fee.blockTimestamp * 1000).toLocaleString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })}
-                        </td>
-                        <td>
-                          <Address address={fee.depositor} />
-                        </td>
-                        <td>{formatAsCurrency(BigInt(fee.depositAmount), 6, String(depositTokenSymbol || "USDC"))}</td>
-                        <td>
-                          <span className="text-green-600 font-medium">
-                            {formatAsCurrency(BigInt(fee.feeAmount), 6, String(depositTokenSymbol || "USDC"))}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="text-blue-600 font-medium">
-                            {((parseFloat(fee.feeAmount) / parseFloat(fee.depositAmount)) * 100).toFixed(2)}%
-                          </span>
-                        </td>
-                        <td>
-                          <TransactionHashLink txHash={fee.transactionHash} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
                 {/* Summary */}
-
                 <div className="stats bg-base-200 shadow w-full mt-6 rounded-md">
                   {/* Treasury Balance */}
                   <div className="stat">
@@ -195,6 +148,52 @@ const ManagementFees: NextPage = () => {
                     </div>
                   </div>
                 </div>
+
+                <table className="table table-sm w-full mt-8">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Depositor</th>
+                      <th>Deposit Amount</th>
+                      <th>Fee Amount</th>
+                      <th>Fee %</th>
+                      <th>Transaction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {managementFees.map(fee => (
+                      <tr key={fee.id} className="hover">
+                        <td className="whitespace-nowrap">
+                          {new Date(fee.blockTimestamp * 1000).toLocaleString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
+                        </td>
+                        <td>
+                          <Address address={fee.depositor} />
+                        </td>
+                        <td>{formatAsCurrency(BigInt(fee.depositAmount), 6, String(depositTokenSymbol || "USDC"))}</td>
+                        <td>
+                          <span className="text-green-600 font-medium">
+                            {formatAsCurrency(BigInt(fee.feeAmount), 6, String(depositTokenSymbol || "USDC"))}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="text-blue-600 font-medium">
+                            {((parseFloat(fee.feeAmount) / parseFloat(fee.depositAmount)) * 100).toFixed(2)}%
+                          </span>
+                        </td>
+                        <td>
+                          <TransactionHashLink txHash={fee.transactionHash} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
