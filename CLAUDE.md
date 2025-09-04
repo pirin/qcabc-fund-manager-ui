@@ -5,13 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # QCABC Fund Manager UI Development Guide
 
 ## Commands
-- **Start development server**: `yarn start` or `yarn dev`
+- **Start development server**: `yarn start`
 - **Build**: `yarn next:build`
 - **Lint**: `yarn lint`
 - **Format**: `yarn next:format`
 - **Type checking**: `yarn next:check-types`
 - **Deploy to Vercel**: `yarn vercel` or `yarn vercel:yolo` (ignore build errors)
 - **GraphClient**: `yarn gc-dev` (development) or `yarn gc-build` (build)
+- **Install dependencies**: `yarn install`
 
 ## Architecture Overview
 
@@ -50,13 +51,14 @@ Main Next.js application with:
 
 ### Configuration
 - **scaffold.config.ts**: Network configuration, API keys, wallet settings
-- **Target Networks**: Base Sepolia and local Foundry (chain ID 31337)
+- **Target Networks**: Base Sepolia and Base mainnet
 - **Polling Interval**: 30 seconds for live networks
 
 ### The Graph Integration
 - **GraphClient**: Queries fund data from The Graph Protocol
-- **Queries**: GetShareholder, GetShareholders, GetPortfolioUpdates
+- **Queries**: GetShareholder, GetShareholders, GetPortfolioUpdates, GetManagementFees
 - **Endpoint**: `https://api.studio.thegraph.com/query/49943/qcabc-fund-manager-graph/version/latest`
+- **Configuration**: Located in `packages/nextjs/.graphclientrc.yml`
 
 ## Code Style Guidelines
 - **Formatting**: Uses Prettier with 120 character line length, 2 space indentation
@@ -108,3 +110,8 @@ Main Next.js application with:
 - Admin functionality restricted to specific addresses
 - All monetary values handled with proper decimal precision (USDC = 6 decimals)
 - Graph queries cached and optimized for performance
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
