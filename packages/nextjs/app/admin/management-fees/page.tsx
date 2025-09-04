@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ADMIN_SECTION, ADMIN_SECTION_HEADER } from "../adminUiConstants";
+import { ADMIN_SECTION_HEADER } from "../adminUiConstants";
 import type { NextPage } from "next";
 import { useReadContract } from "wagmi";
 import { GetManagementFeesDocument, execute } from "~~/.graphclient";
@@ -77,14 +77,13 @@ const ManagementFees: NextPage = () => {
     fetchManagementFees();
   }, []);
 
-  const settingsSection = ADMIN_SECTION;
   const sectionHeader = ADMIN_SECTION_HEADER;
 
   return (
     <>
       {allowAdmin ? (
         <div className="flex flex-col w-4/5 mx-auto gap-4 mt-4">
-          <div className={settingsSection}>
+          <div className="mb-6">
             <p className={sectionHeader}>Management Fees Collected</p>
             {loading ? (
               <div className="flex justify-center items-center py-8">
