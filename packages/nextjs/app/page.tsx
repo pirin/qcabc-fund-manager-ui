@@ -213,7 +213,7 @@ const Home: NextPage = () => {
           <>
             {/* Info Message */}
             {!redemtionsAllowed && sharesOwned ? (
-              <span className="text-accent text-center mt-8">
+              <span className="text-accent-content text-center mt-8">
                 You will be able to redeem your <strong>{formatAsCurrency(sharesOwned)}</strong> shares during the next{" "}
                 <a href="/help#redemption-periods" target="_blank" className="underline">
                   quarterly redemption period

@@ -34,4 +34,4 @@ jobs:
         run: yarn lint --max-warnings=0
 
       - name: Check typings on nextjs
-        run: yarn next:check-types
+        run: yarn check-types

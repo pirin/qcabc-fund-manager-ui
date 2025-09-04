@@ -91,7 +91,9 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url);
     if (url.searchParams.has("holdings")) {
-      console.info(`Oracle value is good! Request is just for the portfolio holdings. Returning portfolio holdings...`);
+      console.info(
+        `Oracle value is good! Request is just for the portfolio holdings. Returning ${value.holdings ? value.holdings.length : "No"} portfolio holdings...`,
+      );
       return NextResponse.json({
         portfolioValue: value.portfolioValue,
         lastUpdated: value.lastUpdated.toISOString(),

@@ -1,5 +1,3 @@
-import { Hardcoded } from "./hardcoded";
-
 export interface PortfolioValue {
   formattedValue: bigint;
   portfolioValue: number;
@@ -129,7 +127,7 @@ export class PortfolioOracle {
       const data = await response.json();
 
       //TODO: Remove it once endpoints tart supplying the portfolio
-      if (!data.portfolio) data.portfolio = Hardcoded.portfolio;
+      //if (!data.portfolio) data.portfolio = Hardcoded.portfolio;
 
       return this.calculatePortfolioValue(data);
     } catch (error) {
