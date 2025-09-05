@@ -6,10 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 - **Start development server**: `yarn start`
-- **Build**: `yarn next:build`
+- **Build**: `yarn build`
 - **Lint**: `yarn lint`
-- **Format**: `yarn next:format`
-- **Type checking**: `yarn next:check-types`
+- **Format**: `yarn format`
+- **Type checking**: `yarn check-types`
 - **Deploy to Vercel**: `yarn vercel` or `yarn vercel:yolo` (ignore build errors)
 - **GraphClient**: `yarn gc-dev` (development) or `yarn gc-build` (build)
 - **Install dependencies**: `yarn install`

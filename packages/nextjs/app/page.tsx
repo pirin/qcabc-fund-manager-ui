@@ -9,6 +9,7 @@ import { EIP5972TxNotification } from "~~/components/EIP5792TxNotification";
 import NoDepositTokensMessage from "~~/components/NoDepositTokensMessage";
 import ShareholderTransactions from "~~/components/ShareholderTransactions";
 import { IntegerInput, IntegerVariant, formatAsCurrency, isValidInteger } from "~~/components/scaffold-eth";
+import { Card } from "~~/components/ui/Card";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { getParsedError, notification } from "~~/utils/scaffold-eth";
@@ -32,6 +33,8 @@ const Home: NextPage = () => {
   const [refresh, setRefresh] = useState<boolean>(false);
   const [depositError, setDepositError] = useState<string>("");
   const [redeemError, setRedeemError] = useState<string>("");
+  const [showTransactions, setShowTransactions] = useState<boolean>(false);
+  const [hasTransactions, setHasTransactions] = useState<boolean>(false);
 
   const { data: sharesOwned, refetch: refetchSharesOwned } = useScaffoldReadContract({
     contractName: "ShareToken",
@@ -207,33 +210,45 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <div className="flex items-center flex-col flex-grow">
+      <div className="flex items-center flex-col flex-grow px-4">
         {connectedAddress ? (
           /* Wallet is connected - show regular UI */
           <>
             {/* Info Message */}
             {!redemtionsAllowed && sharesOwned ? (
-              <span className="text-accent-content text-center mt-8">
-                You will be able to redeem your <strong>{formatAsCurrency(sharesOwned)}</strong> shares during the next{" "}
-                <a href="/help#redemption-periods" target="_blank" className="underline">
-                  quarterly redemption period
-                </a>
-              </span>
+              <div className="alert alert-info max-w-2xl mt-8">
+                <span className="text-center">
+                  You will be able to redeem your <strong>{formatAsCurrency(sharesOwned)}</strong> shares during the
+                  next{" "}
+                  <a href="/help#redemption-periods" target="_blank" className="underline">
+                    quarterly redemption period
+                  </a>
+                </span>
+              </div>
             ) : null}
 
-            {/* Share Balance */}
-            {/* Deposit and Redeem Shares */}
-            <div className="flex flex-col md:flex-row justify-center items-center  flex-grow gap-12 mt-12 mb-4">
-              {/* Deposit Funds */}
-              <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-96 rounded-xl ">
-                <h3 className="text-2xl font-bold">Deposit Funds</h3>
+            {/* Combined Action Cards */}
+            <div className="flex flex-col lg:flex-row justify-center items-stretch gap-8 mt-8 w-full max-w-4xl">
+              {/* Combined Available USDC and Deposit */}
+              <Card className="flex-1 max-w-md text-center">
+                {/* Balance Display */}
+                <div className="bg-gradient-to-r from-primary to-secondary text-primary-content rounded-sm p-4 mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Available</h3>
+                  <div className="text-3xl font-bold">
+                    {depositBalance
+                      ? formatAsCurrency(depositBalance, 6, depositTokenSymbol as string, 0)
+                      : `0 ${depositTokenSymbol}`}
+                  </div>
+                  <p className="text-sm opacity-90 mt-1">Ready for deposit</p>
+                </div>
 
+                {/* Deposit Form */}
                 {depositBalance && parseFloat(formatUnits(depositBalance, 6)) > 0 ? (
                   // User has deposit tokens - show deposit form
                   <>
-                    <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">
+                    <div className="flex flex-col items-center justify-center w-full p-2 mt-4">
                       <div className="py-4">Amount to Deposit</div>
-                      <div className="flex gap-2 mb-2 items-center">
+                      <div className="flex gap-2 mb-2 items-center justify-center">
                         <span className="w-40">
                           <IntegerInput
                             disableMultiplyBy1e18={true}
@@ -266,7 +281,7 @@ const Home: NextPage = () => {
                         </button>
                       </div>
                     </div>
-                    <div className="flex gap-2 mb-2">
+                    <div className="flex justify-center gap-2 mb-2">
                       {!isEIP5792Wallet ? (
                         <button
                           className="btn btn-primary text-lg px-12 mt-2"
@@ -344,17 +359,19 @@ const Home: NextPage = () => {
                       )}
                     </div>
 
-                    <div className="text-xs opacity-50 mt-8">
-                      {depositError ? (
-                        <span className="text-red-500">{depositError}</span>
-                      ) : approvalStatus == ApprovalStatus.Approved ? (
-                        "Approved! Press 'Deposit' to complete your deposit"
-                      ) : !isEIP5792Wallet && mustApprove ? (
-                        "Before depositing, you need to first 'Approve' your deposit"
-                      ) : (
-                        <span>{`${formatAsCurrency(depositBalance, 6, depositTokenSymbol as string, 0)} is available for deposit`}</span>
-                      )}
-                    </div>
+                    {depositError ? (
+                      <div className="alert alert-error mt-4">
+                        <span>{depositError}</span>
+                      </div>
+                    ) : approvalStatus == ApprovalStatus.Approved ? (
+                      <div className="alert alert-success mt-4">
+                        <span>Approved! Press &apos;Deposit&apos; to complete your deposit</span>
+                      </div>
+                    ) : !isEIP5792Wallet && mustApprove ? (
+                      <div className="alert alert-warning mt-4">
+                        <span>Before depositing, you need to first &apos;Approve&apos; your deposit</span>
+                      </div>
+                    ) : null}
                   </>
                 ) : (
                   // User doesn't have deposit tokens - show message
@@ -363,96 +380,145 @@ const Home: NextPage = () => {
                     onDepositTokensMinted={handleRefetchBalance}
                   />
                 )}
-              </div>
-              {/* Redeem Shares */}
-              {redemtionsAllowed && sharesOwned && parseFloat(formatUnits(sharesOwned, 6)) > 0 && (
-                <div className="flex flex-col bg-base-100 h-auto p-10 text-center items-center w-96 rounded-xl">
-                  <h3 className="text-2xl font-bold">Redeem Shares</h3>
+              </Card>
 
-                  <div className="flex flex-col items-center justify-between w-full lg:w-3/5 p-2 mt-4">
-                    <div className="py-4">Shares to redeem</div>
-                    <div className="flex gap-2 mb-2 items-center">
-                      <span className="w-40">
-                        <IntegerInput
-                          disableMultiplyBy1e18={true}
-                          value={sharesToRedeem}
-                          onChange={value => {
-                            if (!isValidInteger(IntegerVariant.UINT256, value)) return;
-                            setSharesToredeem(value);
-                            if (sharesOwned && parseFloat(value) > parseFloat(formatUnits(sharesOwned, 6))) {
-                              setRedeemError(`Amount exceeds your shares`);
-                            } else {
-                              setRedeemError("");
+              {/* Combined Shares Owned and Redeem */}
+              {sharesOwned && parseFloat(formatUnits(sharesOwned, 6)) > 0 ? (
+                <Card className="flex-1 max-w-md text-center">
+                  {/* Balance Display */}
+                  <div className="bg-gradient-to-r from-primary to-secondary text-accent-content rounded-sm p-4 mb-6">
+                    <h3 className="text-lg font-semibold mb-2">Shares Owned</h3>
+                    <div className="text-3xl font-bold">
+                      {sharesOwned ? formatAsCurrency(sharesOwned, 6, "", 2) : "0.00"}
+                    </div>
+                    <p className="text-sm opacity-90 mt-1">
+                      {redemtionsAllowed ? "Available for redemption" : "Redemptions paused"}
+                    </p>
+                  </div>
+
+                  {/* Redeem Form */}
+                  {redemtionsAllowed ? (
+                    <>
+                      <div className="flex flex-col items-center justify-center w-full p-2 mt-4">
+                        <div className="py-4">Shares to redeem</div>
+                        <div className="flex gap-2 mb-2 items-center justify-center">
+                          <span className="w-40">
+                            <IntegerInput
+                              disableMultiplyBy1e18={true}
+                              value={sharesToRedeem}
+                              onChange={value => {
+                                if (!isValidInteger(IntegerVariant.UINT256, value)) return;
+                                setSharesToredeem(value);
+                                if (sharesOwned && parseFloat(value) > parseFloat(formatUnits(sharesOwned, 6))) {
+                                  setRedeemError(`Amount exceeds your shares`);
+                                } else {
+                                  setRedeemError("");
+                                }
+                              }}
+                              placeholder="0"
+                            />
+                          </span>
+                          <button
+                            disabled={!sharesOwned}
+                            className="btn btn-secondary text-xs h-6 min-h-6"
+                            onClick={() => {
+                              if (sharesOwned) {
+                                setSharesToredeem(formatUnits(sharesOwned, 6));
+                              }
+                            }}
+                          >
+                            Max
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex justify-center gap-2 mb-2">
+                        <button
+                          className="btn btn-primary text-lg px-12 mt-2"
+                          disabled={
+                            !hasValidMembershipBadge ||
+                            !sharesToRedeem ||
+                            !!redeemError ||
+                            !redemtionsAllowed ||
+                            isFundManagerTxnPending ||
+                            !isValidInteger(IntegerVariant.UINT256, sharesToRedeem)
+                          }
+                          onClick={async () => {
+                            try {
+                              await writeFundManager({
+                                functionName: "redeemShares",
+                                args: [parseUnits(sharesToRedeem, 6)],
+                              });
+                              setSharesToredeem("");
+                              try {
+                                await refetchSharesOwned();
+                              } catch (error) {
+                                console.error("Error refetching data:", error);
+                              }
+                              await handleRefetchBalance();
+                            } catch (e) {
+                              console.error("Error while redeeming funds", e);
                             }
                           }}
-                          placeholder="0"
-                        />
-                      </span>
-                      <button
-                        disabled={!sharesOwned}
-                        className="btn btn-secondary text-xs h-6 min-h-6"
-                        onClick={() => {
-                          if (sharesOwned) {
-                            setSharesToredeem(formatUnits(sharesOwned, 6));
-                          }
-                        }}
-                      >
-                        Max
-                      </button>
+                        >
+                          Redeem Shares
+                        </button>
+                      </div>
+                      {redeemError ? (
+                        <div className="alert alert-error mt-4">
+                          <span>{redeemError}</span>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    // Show message when redemptions not allowed
+                    <div className="text-center py-8">
+                      <p className="text-base-content/70">Redemptions are currently paused</p>
                     </div>
-                  </div>
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      className="btn btn-primary text-lg px-12 mt-2"
-                      disabled={
-                        !hasValidMembershipBadge ||
-                        !sharesToRedeem ||
-                        !!redeemError ||
-                        !redemtionsAllowed ||
-                        isFundManagerTxnPending ||
-                        !isValidInteger(IntegerVariant.UINT256, sharesToRedeem)
-                      }
-                      onClick={async () => {
-                        try {
-                          await writeFundManager({
-                            functionName: "redeemShares",
-                            args: [parseUnits(sharesToRedeem, 6)],
-                          });
-                          setSharesToredeem("");
-                          try {
-                            await refetchSharesOwned();
-                          } catch (error) {
-                            console.error("Error refetching data:", error);
-                          }
-                          await handleRefetchBalance();
-                        } catch (e) {
-                          console.error("Error while redeeming funds", e);
-                        }
-                      }}
-                    >
-                      {redemtionsAllowed ? "Redeem Shares" : "Redemptions are Paused"}
+                  )}
+                </Card>
+              ) : null}
+            </div>
+
+            {/* Hidden component to check if there are transactions */}
+            <div style={{ display: 'none' }}>
+              <ShareholderTransactions 
+                refresh={refresh} 
+                shareholderAddress={connectedAddress || ""} 
+                onTransactionsLoaded={setHasTransactions}
+              />
+            </div>
+
+            {/* Transaction History Section - Only show if there are transactions */}
+            {hasTransactions && (
+              <div className="w-full max-w-4xl mt-8 mb-8">
+                <Card className="bg-transparent">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold">Transaction History</h3>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setShowTransactions(!showTransactions)}>
+                      {showTransactions ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      )}
+                      {showTransactions ? "Hide" : "Show"}
                     </button>
                   </div>
-                  <div className="text-xs opacity-50 mt-8">
-                    {redeemError ? (
-                      <span className=" text-red-500">{redeemError}</span>
-                    ) : (
-                      <span>
-                        {`${formatAsCurrency(sharesOwned)}  shares are available for
-                        redemption`}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* Shareholder Transactions */}
-            <div className="mb-8 w-1/2 flex-grow">
-              <ShareholderTransactions refresh={refresh} shareholderAddress={connectedAddress} />
-            </div>
-
-            {/* Fund statistics moved to Portfolio page */}
+                  {showTransactions && (
+                    <div className="mt-4">
+                      <ShareholderTransactions 
+                        refresh={refresh} 
+                        shareholderAddress={connectedAddress || ""} 
+                      />
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
           </>
         ) : (
           /* No wallet connected - show connection message */

@@ -16,7 +16,15 @@ type TransactionRecord = {
   id: string;
 };
 
-const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boolean; shareholderAddress: string }) => {
+const ShareholderTransactions = ({ 
+  refresh, 
+  shareholderAddress, 
+  onTransactionsLoaded 
+}: { 
+  refresh: boolean; 
+  shareholderAddress: string;
+  onTransactionsLoaded?: (hasTransactions: boolean) => void;
+}) => {
   const [error, setError] = useState<any>(null);
 
   const [txnHistory, setTxnHistory] = useState<TransactionRecord[]>([]);
@@ -62,8 +70,10 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
         ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         setTxnHistory(sortedTransactionRecords);
+        onTransactionsLoaded?.(sortedTransactionRecords.length > 0);
       } catch (err) {
         setError(err);
+        onTransactionsLoaded?.(false);
       } finally {
       }
     };
@@ -74,16 +84,19 @@ const ShareholderTransactions = ({ refresh, shareholderAddress }: { refresh: boo
   }, [refresh, shareholderAddress]);
 
   if (!shareholderAddress) {
+    onTransactionsLoaded?.(false);
     return null;
   }
 
   if (txnHistory.length === 0) {
     //console.log("No transactions found");
+    onTransactionsLoaded?.(false);
     return null;
   }
 
   if (error) {
     console.error(error);
+    onTransactionsLoaded?.(false);
     return null;
   }
 

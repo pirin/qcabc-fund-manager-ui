@@ -3,10 +3,14 @@
     "allow": [
       "Bash(yarn lint)",
       "Bash(yarn install)",
-      "Bash(yarn next:build:*)",
+      "Bash(yarn build:*)",
       "Bash(yarn gc-build:*)",
-      "Bash(yarn next:check-types:*)",
-      "Bash(yarn next:format:*)"
+      "Bash(yarn check-types:*)",
+      "Bash(yarn next:format:*)",
+      "Bash(yarn --version)",
+      "Bash(yarn workspaces:*)",
+      "Bash(yarn build)",
+      "Bash(yarn format)"
     ],
     "deny": []
   }
