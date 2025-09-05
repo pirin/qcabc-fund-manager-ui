@@ -102,7 +102,7 @@ const Admin: NextPage = () => {
     functionName: "VERSION",
   });
 
-  const { data: owner } = useScaffoldReadContract({
+  const { data: investmentWallet } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "owner",
   });
@@ -112,7 +112,7 @@ const Admin: NextPage = () => {
     functionName: "sharePrice",
   });
 
-  const { data: treasuryBalance, refetch: refetchTreasuryBalance } = useScaffoldReadContract({
+  const { data: depositBalance, refetch: refetchDepositBalance } = useScaffoldReadContract({
     contractName: "FundManager",
     functionName: "treasuryBalance",
   });
@@ -127,7 +127,7 @@ const Admin: NextPage = () => {
     functionName: "symbol",
   });
 
-  const formattedTreasuryBalance = formatAsCurrency(treasuryBalance);
+  const formattedDepositBalance = formatAsCurrency(depositBalance);
 
   const { data: depositToken } = useScaffoldReadContract({
     contractName: "FundManager",
@@ -151,6 +151,26 @@ const Admin: NextPage = () => {
     address: depositToken || "",
     abi: MockUSDC?.abi, //reuse the MockUSDC contract
     functionName: "symbol",
+  });
+
+  const { data: badgeTokenName } = useReadContract({
+    address: membershipBadge || "",
+    abi: MockUSDC?.abi, //reuse the MockUSDC contract
+    functionName: "name",
+  });
+
+  const { data: treasuryWalletBalance } = useReadContract({
+    address: depositToken || "",
+    abi: MockUSDC?.abi, //reuse the MockUSDC contract
+    functionName: "balanceOf",
+    args: [treasuryWallet],
+  });
+
+  const { data: investmentWalletBalance } = useReadContract({
+    address: depositToken || "",
+    abi: MockUSDC?.abi, //reuse the MockUSDC contract
+    functionName: "balanceOf",
+    args: [investmentWallet],
   });
 
   const [portfolioUpdating, setPortfolioUpdating] = useState(false);
@@ -204,18 +224,28 @@ const Admin: NextPage = () => {
 
   // Derived / formatted metrics for top grid
   const sharePriceFormatted = sharePrice ? parseFloat(formatUnits(sharePrice, 6)).toFixed(2) : "0.00";
-  const fundValueFormatted = formatAsCurrency(fundValue, 6, "USDC");
-  const treasuryBalanceFormatted = formattedTreasuryBalance + " " + String(depositTokenSymbol || "");
-  const portfolioValueFormatted = formatAsCurrency(portfolioValue, 6, "USDC");
-  const totalSharesFormatted = formatAsCurrency(totalShares, 6, "", 0);
-  const redemptionsStatus = redemptionsAllowed ? "Allowed" : "Paused";
+  const fundValueFormatted = formatAsCurrency(fundValue, 6, String(depositTokenSymbol || ""));
+  const depositBalanceFormatted = formattedDepositBalance + " " + String(depositTokenSymbol || "");
+  const portfolioValueFormatted = formatAsCurrency(portfolioValue, 6, String(depositTokenSymbol || ""));
+  const totalSharesFormatted = formatAsCurrency(totalShares, 6, "Shares", 0);
+  const treasuryWalletBalanceFormatted = formatAsCurrency(
+    treasuryWalletBalance as bigint | undefined,
+    6,
+    String(depositTokenSymbol || ""),
+  );
+  const investmentWalletBalanceFormatted = formatAsCurrency(
+    investmentWalletBalance as bigint | undefined,
+    6,
+    String(depositTokenSymbol || ""),
+  );
+
   const metrics = [
     { label: "Fund Value", value: fundValueFormatted },
-    { label: "Treasury", value: treasuryBalanceFormatted },
+    { label: "Deposit Balance", value: depositBalanceFormatted },
     { label: "Portfolio Value", value: portfolioValueFormatted },
-    { label: "Share Price", value: `${sharePriceFormatted} USDC` },
-    { label: "Total Shares", value: totalSharesFormatted },
-    { label: "Redemptions", value: redemptionsStatus, className: redemptionsAllowed ? "text-success" : "text-error" },
+    { label: "Treasury Balance", value: treasuryWalletBalanceFormatted },
+    { label: "Investment Balance", value: investmentWalletBalanceFormatted },
+    { label: "Share Price", value: `${sharePriceFormatted} ${String(depositTokenSymbol || "")}` },
   ];
   return (
     <>
@@ -226,7 +256,7 @@ const Admin: NextPage = () => {
             {metrics.map((m, i) => (
               <Card key={i} className="!p-4 gap-1">
                 <span className="text-[10px] font-medium uppercase tracking-wide opacity-60">{m.label}</span>
-                <span className={`text-sm font-semibold tabular-nums ${m.className || ""}`}>{m.value}</span>
+                <span className={`text-sm font-semibold tabular-nums`}>{m.value}</span>
               </Card>
             ))}
           </div>
@@ -281,13 +311,13 @@ const Admin: NextPage = () => {
             </div>
           </Card>
 
-          {/* Treasury & Redemptions */}
+          {/* Deposits & Redemptions */}
           <Card className="w-full !p-4 gap-4">
-            <p className={sectionHeader}>Treasury & Redemptions</p>
+            <p className={sectionHeader}>Deposits & Redemptions</p>
 
             {/* Transfer funds to the Investment Wallet */}
             <div className={settingsRow}>
-              <p className={settingsLabel}>Transfer funds to the Investment Wallet</p>
+              <p className={settingsLabel}>Transfer Deposit funds to the Investment Wallet</p>
 
               <div className="flex flex-row gap-4 items-center justify-end">
                 <span className="w-36">
@@ -297,15 +327,15 @@ const Admin: NextPage = () => {
                       if (!isValidInteger(IntegerVariant.UINT256, value)) return;
                       setTreasuryToAmount(value);
                     }}
-                    placeholder={formattedTreasuryBalance}
+                    placeholder={formattedDepositBalance}
                   />
                 </span>
                 <button
-                  disabled={!treasuryBalance}
+                  disabled={!depositBalance}
                   className="btn btn-secondary text-xs h-6 min-h-6"
                   onClick={() => {
-                    if (treasuryBalance) {
-                      setTreasuryToAmount(formatUnits(treasuryBalance, 6));
+                    if (depositBalance) {
+                      setTreasuryToAmount(formatUnits(depositBalance, 6));
                     }
                   }}
                 >
@@ -319,9 +349,9 @@ const Admin: NextPage = () => {
                     try {
                       await writeFundManager({
                         functionName: "investFunds",
-                        args: [owner, parseUnits(treasuryToAmount, 6)],
+                        args: [investmentWallet, parseUnits(treasuryToAmount, 6)],
                       });
-                      await refetchTreasuryBalance();
+                      await refetchDepositBalance();
                       setTreasuryToAmount("");
                     } catch (e) {
                       console.error("Error while sending treasury funds", e);
@@ -414,6 +444,7 @@ const Admin: NextPage = () => {
             <p className={sectionHeader}>Shareholders</p>
             <div className={settingsRow}>
               <p className={settingsLabel}>Manage fund shareholders and membership badges</p>
+              {totalSharesFormatted}
               <button className={settingsButton} onClick={() => router.push("/admin/shareholders")}>
                 View Shareholders
               </button>
@@ -430,7 +461,8 @@ const Admin: NextPage = () => {
             </div>
             <div className={settingsRow}>
               <p className={settingsLabel}>Investment Wallet</p>
-              <Address address={owner} />
+              {investmentWalletBalanceFormatted}
+              <Address address={investmentWallet} />
             </div>
 
             <div className={settingsRow}>
@@ -475,6 +507,7 @@ const Admin: NextPage = () => {
 
             <div className={settingsRow}>
               <p className={settingsLabel}>Membership Badge NFT</p>
+              <p className="flex-1 text-right">{String(badgeTokenName || "")}</p>
               {editingMembershipBadge ? (
                 <span className="flex flex-row gap-4 items-center">
                   <span className="w-96">
